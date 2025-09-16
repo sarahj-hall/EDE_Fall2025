@@ -1,6 +1,6 @@
 ---
 title: "Assignment 2: Coding Basics"
-author: "Student Name"
+author: "Sarah Hall"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -33,9 +33,15 @@ This exercise accompanies the lessons/labs in Environmental Data Analytics on co
 ```{r basics 1}
 #1. 
 
+sequence_by_five <- seq(1,55,5) #Generates a sequence of numbers from 1 to 55, increasing by 5s. Sequence is named sequence_by_five
+
 #2. 
 
+mean(sequence_by_five) #calculates the mean
+median(sequence_by_five) #calculates the median 
+
 #3. 
+mean(sequence_by_five) > median(sequence_by_five) #evaluates if the mean is greater than the median, returns a boolean value
 
 ```
 
@@ -50,13 +56,19 @@ This exercise accompanies the lessons/labs in Environmental Data Analytics on co
 8.  Label the columns of your data frame with informative titles.
 
 ```{r basics 2}
+#creates three vectors each with four components  
+NameVector <- c("Sarah", "Jim", "Bob", "Joe") #Vector Type: character 
+ScoreVector <- c(97, 82, 89, 74) #Vector Type: numeric
+ScholarshipVector <- c(TRUE, TRUE, FALSE, FALSE) #Vector Type: logic 
 
+StudentInformation <- data.frame(NameVector, ScoreVector, ScholarshipVector) #creates dataframe with three vectors 
+names(StudentInformation) <-  c("Student Name", "Test Score", "Scholarship Status") #names columns in dataframe 
 
 ```
 
 9.  QUESTION: How is this data frame different from a matrix?
 
-> Answer:
+> Answer: This data frame stores data of all different types (logic, character, and numeric), while a matrix stores data that is all the same data type. Data frames can also have variable numbers of rows and columns (in this example: 3 columns, 4 rows), while a matrix has fixed rows and columns. 
 
 10. Create a function with one input. In this function, use `if`...`else` to evaluate the value of the input: if it is greater than 50, print the word "Pass"; otherwise print the word "Fail". 
 
@@ -69,20 +81,39 @@ This exercise accompanies the lessons/labs in Environmental Data Analytics on co
 ```{r basics 3}
 #10. Create a function using if...else
 
+PassFail1 <- function(test_score) {
+  if(test_score > 50){
+     print("Pass")
+  }
+  else{
+    print("Fail")
+  }
+}
+
 #11. Create a function using ifelse()
+
+PassFail2 <- function(test_score) {
+  ifelse(test_score>50,"Pass","False")
+}
 
 #12a. Run the first function with the value 52.5
 
+PassFail1(52.5)
+
 #12b. Run the second function with the value 52.5
 
+PassFail2(52.5)
+
 #13a. Run the first function with the vector of test scores
+#PassFail1(ScoreVector) #function does not work
 
 #13b. Run the second function with the vector of test scores
+PassFail2(ScoreVector)
 ```
 
 14. QUESTION: Which option of `if`...`else` vs. `ifelse` worked? Why? (Hint: search the web for "R vectorization")
 
-> Answer:
+> Answer:Ifelse worked. Ifelse is deisgned for vecotorized operations, while if... else is for single scale inputs. Vectorized operations means the functions loops through and operates on all elements of the vector.
 
 
 **NOTE** Before knitting, you'll need to comment out the call to the function in Q13 that does not work. (A document can't knit if the code it contains causes an error!)
