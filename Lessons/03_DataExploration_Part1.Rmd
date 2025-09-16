@@ -1,0 +1,356 @@
+---
+title: "3: Data Exploration"
+author: "Environmental Data Analytics | John Fay and Luana Lima | Developed by Kateri Salk"
+date: "Fall 2025"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+## LESSON OBJECTIVES
+
+1.  Apply data exploration skills to a real-world example dataset
+
+2.  Set up a data analysis session in RStudio
+    - Working with R Packages
+    - Establishing the working directory
+    - Importing datasets
+    
+3.  Explore the imported datasets
+    - Examining properties of your dataset
+    - Identifying and addressing issues
+    
+4.  Saving processed data
+
+---
+
+## SETTING UP A DATA ANALYSIS SESSION IN RSTUDIO
+
+In many situations in data analytics, you may be expected to work from multiple computers or share projects among multiple users. A few general best practices will avoid common pitfalls related to collaborative work. 
+
+### Working with R Packages
+
+#### What is a package?
+Packages add functionality to your R coding environment. Given that R is an open source software, users can create packages that have specific capabilities, with complicated code "packaged" into a simple commands - something that makes R incredibly useful and powerful. 
+
+Basic R includes many pre-installed packages, but you will likely need to install additional packages at some point. Like apps on a phone, packages only need to be installed once on a specific machine (or container), and then all future R scripts can import that package without having to re-install it. You can see the list of installed packages via the `Packages` tab in the Outputs pane (lower right).  
+
+#### Installing packages
+If you want to use a specific package that is not in your library already, you need to install it. You can do this in one of three ways: 
+
+1. If your code calls a package that's not installed, a yellow ribbon at the top of the code appears asking whether you want to install the package. Clicking the `Install` button will install the package. 
+
+2. Click the install button in the packages tab. Type the package name, which should autocomplete below (case matters). Make sure to check "install dependencies," which will also install packages that your new package uses. 
+
+3. Type `install.packages("packagename")` into your R chunk or console. It will then appear in your packages list. 
+
+> Reminder: you only need to install packages once on a given machine. In fact, if you include the `install.packages()` command in an R code chunk, you should comment it out; otherwise, R will reinstall the package each time the code is run. **Furthermore, your RMarkdown file will not knit, as the knit command is unable install packages.**
+
+
+#### Loading packages
+To access the functionality of an installed package in your code, you typically load it using the `library()` command. And all packages should be loaded at the top of your code, thus providing an easy to see list of all the packages which your script requires.
+
+You need to load packages each time you start (or restart) an R coding session; once the RStudio application is closed, connections to the packages are reset. (Another good reason to load your packages in your script itself.) 
+
+> Note: 
+-  You can access the functionality of a package without loading it via the `library()` function. This is done by preceding the command you want to use with the name of the library, e.g., `lubridate::mdy('Jan-01-2001')` will execute the `myd()` function of the lubridate package without needing to actually load the lubridate package. 
+-  Also, you can load, unload, or just view what packages are loaded in your current session via the Packages tab in the Output pane. However, it's best practice to load packages in your code. (Can you guess why?) 
+
+```{r Setup: Loading Packages}
+#Install packages - uncomment these only when you need to install packages
+#install.packages('dplyr')
+#install.packages('ggplot')
+#install.packages('here')
+
+#Load the tidyverse, ggplot2, and here package
+library(dplyr)
+library(ggplot2)
+library(here)
+
+
+# Some packages are umbrellas under which other packages are loaded
+#install.packages("tidyverse")
+library(tidyverse)
+```
+
+Question: What happens in the console when you load a package?
+
+> Answer: 
+
+---
+
+### Establishing the working directory
+
+#### The importance of the "working directory"
+A typical R project involves many files organized into folders and subfolders, all located within a single **project folder**. Your R code is able to find these various files via their paths, and these paths are relative to a central location called the **working directory**. However, for this to work, R needs to know what, precisely, we want to use as a working directory. 
+
+When you open an R project, your working directory *should* automatically set to the folder that holds the project file (`*.Rproj`). However, if you open an R script or RMarkdown document directly by double-clicking the file, your working directory may automatically set to the folder that holds that file. And the fact that the working directory changes depending on how we've opened a file can mess up our scripts, since they rely on a stable and specific working directory. 
+
+#### Setting the working directory
+The R commands `getwd()` and `setwd()` allow us to get and set the working directory, respectively. The `setwd()` command, however, requires an absolute path. Thus, if ever you rename or move directories, your code breaks. We discourage you from using `setwd()`. 
+
+Instead, we will use the `here` package, which was developed to overcome this very issue. See this page for a deeper explanation: <https://github.com/jennybc/here_here>. The `here()` command of the `here` package will *always* point to whatever folder your R Project files is in, and then we can use that as a base to find all other files without our project workspace. 
+
+Thus, you'll want to include the following command, also early on in your RMarkdown document to reveal 
+
+```{r Setup: Configure working directory}
+#Use getwd() to reveal what R sees as the working directory
+getwd()
+
+#Use here to show where the R Project file is
+here()
+```
+ 
+---
+
+### Importing datasets
+
+Datasets can be imported into R. Good data practices dictate that raw data (from yourself or others) should not be changed and re-saved within the spreadsheet, but rather the data should be changed with reproducible techniques and saved as a new file. Note:  data should be saved in nonproprietary formats, namely .csv or .txt files rather than .xls or .xlsx files. 
+
+To read in a data file, you may specify a file path with an *absolute* or a *relative* file path. As above with your working directory, it is a better practice to use a relative directory. To navigate a relative file path, use `./` followed by the tab key to navigate  forward in the folder structure, and use `../` followed by the tab key to navigate back out of the folder structure. For example, this lesson is located in the "Lessons" folder, and we need to navigate into the "Data" folder. After clicking the correct folder, use `/` and press tab again to continue the process. 
+
+You may also import datasets from the Files tab, but this is not recommended since this is not reproducible.
+
+Commons functions to import datasets and store as data frames are *read.table()*, *read.csv()*, *read.xlsx()*. Useful inputs/arguments are described below.
+
+-   *file = * : use this input to point to your data file. If it's on the same folder as your .Rmd then you only need to write the file name. But if it's on another folder you need to point to the path were file is located;
+-   *header =* : if your file has a header you should set this to TRUE, o.w. FALSE;
+-   *skip =* : if your file has rows explaining the data or any other rows on the top that need to be skipped you should just set skip to be equal to the number of row that should be skipped before reading the data. Mote that if header=TRUE, you should not skip the row with the header. The defaul is *skip=0*;
+-   *dec =* : define *dec="."* or *dec=","* depending on how it's defined on your set. The default is ".".
+
+```{r Importing data}
+# Absolute file path (not recommended)
+#read.csv(
+#  file="/home/guest/EDE_Fall2024/Data/Raw/USGS_Site02085000_Flow_Raw.csv",
+#  stringsAsFactors = TRUE)
+
+# Relative file path (friendly for users regardless of machine)
+USGS.flow.data <- read.csv(
+  file = here("./Data/Raw/USGS_Site02085000_Flow_Raw.csv"),
+  stringsAsFactors = TRUE)   
+
+# What happens if we don't assign a name to our imported dataset?
+read.csv(here("./Data/Raw/USGS_Site02085000_Flow_Raw.csv"),stringsAsFactors = TRUE)
+
+```
+
+>Tip: Use autocomplete in the console instead of typing in the path...
+
+### Putting it all together
+Summarizing the above, your scripts should typically begin with the following three elements: loading packages, confirming workspace locations, and importing data using relative paths. Write a code chunk below that consolidates all these into a single chunk.
+
+Prior to running this, reset your workspace (Session->Restart R) to ensure it runs ok as is, with no reliance on previous code run.
+
+```{r Setup}
+# Load packages
+
+# Confirm working directory
+
+# Load the USGS flow data into a data frame
+
+```
+
+---
+
+## EXPLORING YOUR DATASET
+
+### Understanding your data
+Prior to analyzing your dataset, take a moment to understand your data. Where did it come from? How was it collected? Who collected it and for what purpose? How might that purpose conflict with your own? Could there be any biases in the data? Anything else that might make you question its precision, accuracy, or validity? 
+
+Take a moment to read through the README file associated with the USGS dataset on discharge at the Eno River. Where can you find this file? How does the placement and information found in this file relate to the best practices for reproducible data analysis?
+
+> ANSWER: 
+
+### Examine properties of your dataset
+Next, have a look at your dataset. Browse your data in RStudio's viewer. Have a look at the structure of your data. Consider renaming columns. 
+
+```{r Exploring data}
+View(USGS.flow.data)
+# Alternate option: click on data frame in Environment tab
+
+class(USGS.flow.data)
+colnames(USGS.flow.data)
+
+# Rename columns
+colnames(USGS.flow.data) <- c("agency_cd", "site_no", "datetime", 
+                              "discharge.max", "discharge.max.approval", 
+                              "discharge.min", "discharge.min.approval", 
+                              "discharge.mean", "discharge.mean.approval", 
+                              "gage.height.max", "gage.height.max.approval", 
+                              "gage.height.min", "gage.height.min.approval", 
+                              "gage.height.mean", "gage.height.mean.approval")
+str(USGS.flow.data)
+dim(USGS.flow.data)
+length(USGS.flow.data)
+
+head(USGS.flow.data)
+head(USGS.flow.data, 10)
+tail(USGS.flow.data, 5)
+USGS.flow.data[30000:30005, c(3, 8, 14)]
+
+class(USGS.flow.data$datetime)
+class(USGS.flow.data$discharge.mean)
+class(USGS.flow.data$gage.height.mean)
+
+summary(USGS.flow.data)  #could point to column only with $
+
+```
+
+What happened to blank cells in the spreadsheet when they were imported into R?
+> Answer: 
+
+### Identify and address issues: Missing Data
+
+Notice in our dataset that our discharge and gage height observations have many NAs, meaning no measurement was recorded for a specific day. In some cases, it might be in our best interest to remove NAs from a dataset. Removing NAs or not will depend on your research question.
+
+```{r Finding NAs}
+summary(USGS.flow.data$discharge.mean)
+summary(USGS.flow.data$gage.height.mean)
+```
+Question: What types of research questions might make it favorable to remove NAs from a dataset, and what types of research questions might make it favorable to retain NAs in the dataset?
+
+> Answer: 
+
+```{r Removing NAs}
+USGS.flow.data.complete <- na.omit(USGS.flow.data)
+dim(USGS.flow.data)
+dim(USGS.flow.data.complete)
+
+mean(USGS.flow.data.complete$discharge.mean)
+sd(USGS.flow.data.complete$discharge.mean)
+summary(USGS.flow.data.complete$discharge.mean)
+
+```
+
+>Note: We will return to the issue of dealing with missing data later in the course, examining some more refined techniques than simply deleting an entire row or a column from our dataset.  
+
+
+### Identify and address issues: Data Types
+
+```{r Show the structure}
+#Reveal the structure of the columns and data in your dataframe
+str(USGS.flow.data)
+```
+
+With the `read.csv()`, R guesses at a columns data type by looking at the values in the column. But it doesn't always guess correctly. Sometimes we have to overrule R's guess. We can do that after importing data into a dataframe through various functions.
+
+The code chunk below shows how we coerce R to set `site_no` to be a *factor*, not an integer. 
+
+```{r}
+USGS.flow.data$site_no <- as.factor(USGS.flow.data$site_no)
+str(USGS.flow.data)
+```
+
+Alternatively, we can tell R to import it as a factor when we read the data in 
+
+```{r}
+USGS.flow.data2  <- read.csv(
+  file = here("./Data/Raw/USGS_Site02085000_Flow_Raw.csv"),
+  stringsAsFactors = TRUE) 
+```
+
+
+### Identify and address issues: Formatting dates
+
+R will often import dates as factors or characters rather than dates. To fix, this we need to tell R that it is looking at dates. We also need to specify the format the dates are in. By default, if you don't provide a format, R will attempt to use %Y-%m-%d or %Y/%m/%d as a default. Note: if you are working collaboratively in an international setting, using a year-month-day format in spreadsheets is the least ambiguous of date formats. Make sure to check whether month-day-year or day-month-year is used in an ambiguously formatted spreadsheet.
+
+Formatting of dates in R: 
+
+%d  day as number (0-31)
+%m  month (00-12, can be e.g., 01 or 1)
+%y  2-digit year
+%Y  4-digit year
+%a  abbreviated weekday
+%A  unabbreviated weekday
+%b  abbreviated month
+%B  unabbreviated month
+
+In some cases when dates are provided as integers, you may need to provide an origin for your dates. Beware: the "origin" date for Excel (Windows), Excel (Mac), R, and MATLAB all have different origin dates. Google this if it comes up.
+
+```{r Date formats}
+help(as.Date)
+
+# Adjust date formatting [to be done in lab session]
+# Write code for three differtent date formats.
+# An example is provided to get you started.
+# (code must be uncommented)
+today <- Sys.Date()
+format(today, format = "%B")
+#format(today, format = "")
+#format(today, format = "")
+#format(today, format = "")
+
+USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%m/%d/%y") 
+```
+
+Note that for every date prior to 1969, R has assigned the date in the 2000s rather than the 1900s. This can be fixed with an `ifelse` statement inside a function. Run through the code below and write what is happening in the comment above each line.
+
+```{r Fixing dates}
+# 
+USGS.flow.data$datetime <- format(USGS.flow.data$datetime, "%y%m%d")
+
+#
+create.early.dates <- (function(d) {
+       paste0(ifelse(d > 191226,"19","20"),d)
+       })
+#
+USGS.flow.data$datetime <- create.early.dates(USGS.flow.data$datetime)
+
+#
+USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%Y%m%d") 
+
+```
+
+>Note: Soon we will explore the `lubridate()` package, which greatly simplifies working with dates. For now, however, it's important to understand these base-R commands as you are likely to see them in other peoples scripts. 
+
+---
+
+## SAVING DATASETS
+
+We just edited our raw dataset into a processed form. We may want to return to this processed dataset later, which will be easier to do if we save it as a spreadsheet. 
+
+
+```{r Saving data}
+write.csv(
+  USGS.flow.data, 
+  file = here("./Data/Processed/USGS_Site02085000_Flow_Processed.csv"), 
+  row.names=FALSE)
+
+```
+
+---
+
+## TIPS & TRICKS
+
+###Packages
+
+-   The command `require(packagename)` will also load a package, but it will not give any error or warning messages if there is an issue.
+
+-   You may be asked to restart R when installing or updating packages. Feel free to say no, as this will obviously slow your progress. However, if the functionality of your new package isn't working properly, try restarting R as a first step. 
+
+-   If asked "Do you want to install from sources the packages which needs compilation?", type `yes` into the console. 
+
+-   You should only install packages once on your machine. If you store `install.packages` in your R chunks/scripts, comment these lines out. 
+
+-   Update your packages regularly! 
+
+
+### Knitting
+
+-   In the Knit menu in the Editor, you will need to specify whether your knit directory should be the document directory or the project directory. If your document is not knitting correctly, try switching between the document directory and project directory as a first troubleshooting option.
+
+
+### Spreadsheets
+
+-   Files should be saved as .csv or .txt for easy import into R. Note that complex formatting, including formulas in Excel, are not saved when spreadsheets are converted to comma separated or text formats (i.e., values alone are saved).
+
+-   The first row is reserved for column headers.
+
+-   A secondary row for column headers (e.g., units) should not be used if data are being imported into R. Incorporate units into the first row column headers if necessary.
+
+-   Short names are preferred for column headers, to the extent they are informative. Additional information can be stored in comments within R scripts and/or in README files.
+
+-   Spaces in column names will be replaced with a `.` when imported into R. When designing spreadsheets, avoid spaces in column headers. 
+
+-   Avoid symbols in column headers. This can cause issues when importing into R.
