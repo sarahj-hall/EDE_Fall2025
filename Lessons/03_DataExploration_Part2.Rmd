@@ -25,10 +25,21 @@ Why is data exploration our first step in analyzing a dataset? What information 
 ```{r, Setup-Import-Explore, message = FALSE}
 ## -Set up-
 # 1. Load packages (tidyverse, here)
+library(tidyverse)
+library(here)
 
 # 2. Check the working directory
+getwd()
+here() #double check that they are both the same, checking that project location is correct (should be EDEFall2025)
 
 # 3. Import datasets
+USGS.flow.data <- read.csv(
+  file = here('Data/Processed/USGS_Site02085000_Flow_Processed.csv'),
+  stringsAsFactors = TRUE,
+  colClasses = c('site_no' = 'factor')
+)
+
+
 
 ## -Initial Exploration-
 
@@ -36,10 +47,15 @@ Why is data exploration our first step in analyzing a dataset? What information 
 # Alternate option: click on data frame in Environment tab
 
 #View column names and the structure of the dataset
+colnames(USGS.flow.data)
+str(USGS.flow.data)
 
 # Check our date column: is it a date object?
+class(USGS.flow.data$datetime)
 
 # Change it to a date object and confirm
+USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = '%Y-%n-%d')
+class(USGS.flow.data$datetime)
 
 
 ```
