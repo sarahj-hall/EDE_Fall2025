@@ -68,15 +68,15 @@ library(dplyr)
 library(ggplot2)
 library(here)
 
-
 # Some packages are umbrellas under which other packages are loaded
+#when you load compounded/umbrella packages it loads multiple libraries 
 #install.packages("tidyverse")
 library(tidyverse)
 ```
 
 Question: What happens in the console when you load a package?
 
-> Answer: 
+> Answer: Errors come up showing packages with the same names (ex: dplyr has a filter, and this package called stats also has a filter) to use the other one, do stats::filter 
 
 ---
 
@@ -144,10 +144,20 @@ Prior to running this, reset your workspace (Session->Restart R) to ensure it ru
 
 ```{r Setup}
 # Load packages
+library(dplyr)
+library(ggplot2)
+library(here)
+library(tidyverse)
 
 # Confirm working directory
+getwd()
+here()
 
 # Load the USGS flow data into a data frame
+# Relative file path (friendly for users regardless of machine)
+USGS.flow.data <- read.csv(
+  file = here("./Data/Raw/USGS_Site02085000_Flow_Raw.csv"),
+  stringsAsFactors = TRUE)   
 
 ```
 
@@ -160,17 +170,17 @@ Prior to analyzing your dataset, take a moment to understand your data. Where di
 
 Take a moment to read through the README file associated with the USGS dataset on discharge at the Eno River. Where can you find this file? How does the placement and information found in this file relate to the best practices for reproducible data analysis?
 
-> ANSWER: 
+> ANSWER: The README file is found in the metadata folder, this information is very important for how the data was produced and allows for another used to replicate the dataset for the same year or for other years. 
 
 ### Examine properties of your dataset
 Next, have a look at your dataset. Browse your data in RStudio's viewer. Have a look at the structure of your data. Consider renaming columns. 
 
 ```{r Exploring data}
-View(USGS.flow.data)
+#View(USGS.flow.data)
 # Alternate option: click on data frame in Environment tab
 
-class(USGS.flow.data)
-colnames(USGS.flow.data)
+class(USGS.flow.data) #what kind of variable is this variable 
+colnames(USGS.flow.data) #column names, could also use names()
 
 # Rename columns
 colnames(USGS.flow.data) <- c("agency_cd", "site_no", "datetime", 
@@ -187,9 +197,9 @@ length(USGS.flow.data)
 head(USGS.flow.data)
 head(USGS.flow.data, 10)
 tail(USGS.flow.data, 5)
-USGS.flow.data[30000:30005, c(3, 8, 14)]
+USGS.flow.data[30000:30005, c(3, 8, 14)] #look at specific sample of rows, and columns 
 
-class(USGS.flow.data$datetime)
+class(USGS.flow.data$datetime) #$ pulls out a specific column and pulls out a value
 class(USGS.flow.data$discharge.mean)
 class(USGS.flow.data$gage.height.mean)
 
@@ -198,14 +208,14 @@ summary(USGS.flow.data)  #could point to column only with $
 ```
 
 What happened to blank cells in the spreadsheet when they were imported into R?
-> Answer: 
+> Answer: they are automatically given NA for numerical data
 
 ### Identify and address issues: Missing Data
 
 Notice in our dataset that our discharge and gage height observations have many NAs, meaning no measurement was recorded for a specific day. In some cases, it might be in our best interest to remove NAs from a dataset. Removing NAs or not will depend on your research question.
 
 ```{r Finding NAs}
-summary(USGS.flow.data$discharge.mean)
+summary(USGS.flow.data$discharge.mean) #use$ to get summary of a specific column 
 summary(USGS.flow.data$gage.height.mean)
 ```
 Question: What types of research questions might make it favorable to remove NAs from a dataset, and what types of research questions might make it favorable to retain NAs in the dataset?
@@ -213,11 +223,12 @@ Question: What types of research questions might make it favorable to remove NAs
 > Answer: 
 
 ```{r Removing NAs}
-USGS.flow.data.complete <- na.omit(USGS.flow.data)
+USGS.flow.data.complete <- na.omit(USGS.flow.data) #removes all rows with missing data is removed 
 dim(USGS.flow.data)
 dim(USGS.flow.data.complete)
 
-mean(USGS.flow.data.complete$discharge.mean)
+mean(USGS.flow.data$discharge.mean) #can't calculate mean with NA values 
+mean(USGS.flow.data.complete$discharge.mean) #calculate mean w/ new DF with no NA values 
 sd(USGS.flow.data.complete$discharge.mean)
 summary(USGS.flow.data.complete$discharge.mean)
 
@@ -242,12 +253,13 @@ USGS.flow.data$site_no <- as.factor(USGS.flow.data$site_no)
 str(USGS.flow.data)
 ```
 
-Alternatively, we can tell R to import it as a factor when we read the data in 
+Alternatively, we can tell R to import it as a factor when we read the data in (usually better)
 
 ```{r}
 USGS.flow.data2  <- read.csv(
   file = here("./Data/Raw/USGS_Site02085000_Flow_Raw.csv"),
   stringsAsFactors = TRUE) 
+  colClasses = c('site_number'='factor')
 ```
 
 
@@ -277,18 +289,18 @@ help(as.Date)
 # (code must be uncommented)
 today <- Sys.Date()
 format(today, format = "%B")
-#format(today, format = "")
-#format(today, format = "")
+format(today, format = "%m/%d/%Y")
+format(today, format = "%a,%m,%d")
 #format(today, format = "")
 
-USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%m/%d/%y") 
+USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%m/%d/%y") #takes data and puts into date column in data, specifies month/day/year 
 ```
 
 Note that for every date prior to 1969, R has assigned the date in the 2000s rather than the 1900s. This can be fixed with an `ifelse` statement inside a function. Run through the code below and write what is happening in the comment above each line.
 
 ```{r Fixing dates}
 # 
-USGS.flow.data$datetime <- format(USGS.flow.data$datetime, "%y%m%d")
+USGS.flow.data$datetime <- format(USGS.flow.data$datetime, "%y%m%d") #changes format to year,month,day
 
 #
 create.early.dates <- (function(d) {
@@ -314,7 +326,7 @@ We just edited our raw dataset into a processed form. We may want to return to t
 ```{r Saving data}
 write.csv(
   USGS.flow.data, 
-  file = here("./Data/Processed/USGS_Site02085000_Flow_Processed.csv"), 
+  file = here("./Data/Processed/USGS_Site02085000_Flow_Processed.csv"), #. evaluates to here, starts in wd 
   row.names=FALSE)
 
 ```
