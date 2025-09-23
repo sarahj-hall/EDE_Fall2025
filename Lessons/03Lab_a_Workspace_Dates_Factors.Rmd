@@ -1,4 +1,4 @@
----
+``---
 title: "Lab 3b - Workspaces, Dates, and Factors"
 author: "Environmental Data Analytics | John Fay and Luana Lima "
 date: "Fall 2025"
@@ -40,7 +40,7 @@ And thus we introduce the `here` package, designed to streamline this process. A
 library(here) #Note this package may conflict with plyr and lubridate
 
 #The command `here()` points to the location containing the ".Rrpoj" file, i.e. 
-# the project directory...
+# the project directory is home/guest/EDE_Fall2025
 here() 
 
 #`here()` is not affected by the setwd() command
@@ -79,10 +79,23 @@ print(filenames)
 ```{r here in action}
 
 # 1. Read the 'NTL-LTER_Lake_ChemistryPhysics_Raw.csv' into a dataframe
-
+NTL_data <- read.csv(
+  file = here("./Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv"),
+  stringsAsFactors = TRUE 
+)
 
 # 2.
 library(tidyverse);library(here)
+#make a file path to data
+filefolder <- here('Data', 'Raw')
+
+#Looks for all the .csv files and makes a list of them called “files”
+files <- dir(filefolder, pattern = "EPAair_O3*.*", full.names = TRUE)
+
+#Then use map() to take that list, run read_csv on all of them and bind them together.
+EPAData <- files %>%
+  map(read_csv) %>% 
+  bind_rows()
 
 ```
 
@@ -120,10 +133,10 @@ More info on lubridate [here][<https://cran.r-project.org/web/packages/lubridate
 library(lubridate)
 
 #Ex1
-str_today <- "2023-feb-7"
+str_today1 <- "2023-sep-18"
 #Since the format is year-month-day we will use function ymd()
-date_obj_today <- ymd(str_today)
-date_obj_today
+date_obj_today1 <- ymd(str_today1)
+date_obj_today1
 
 #Ex2
 str_today2 <- "Feb 7, 2023"
@@ -204,7 +217,7 @@ library(tidyverse);library(lubridate); library(here)
 sites <- read.csv(here('Data/Raw/NWIS_SiteFlowData_NE_RAW.csv'))
 dim(sites)
 
-#Convert date column to date object
+#Convert date column to date object, (hour, min, sec)
 sites$date <- ymd_hms(sites$date)
 
 ```
@@ -337,10 +350,17 @@ usgs_flow_data$datetime = mdy(usgs_flow_data$datetime)
 usgs_flow_data$month <- month(usgs_flow_data$datetime)
 
 #Convert to a factor, with labels and levels
+usgs_flow_data$month <-  factor(usgs_flow_data$month)
 
+#add all months 
+usgs_flow_data$month <- factor(
+  usgs_flow_data$month,
+  levels = seq(1,12),
+  labels = month.abb,
+)
 
 #Plot
-
+ggplot(usgs_flow_data, aes(x=dow))
 
 ```
 
