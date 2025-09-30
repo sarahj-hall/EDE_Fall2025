@@ -29,10 +29,10 @@ library(tidyverse)
 library(lubridate)
 NTL.phys.data <- read.csv("./Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv", stringsAsFactors = TRUE)
 
-colnames(NTL.phys.data)
-head(NTL.phys.data)
-summary(NTL.phys.data)
-str(NTL.phys.data)
+colnames(NTL.phys.data) #column names 
+head(NTL.phys.data) #first couple rows 
+summary(NTL.phys.data) #summary stats of table
+str(NTL.phys.data) #datatype of the df
 dim(NTL.phys.data)
 
 class(NTL.phys.data$sampledate)
@@ -63,14 +63,14 @@ vignette("dplyr")
 Filtering allows us to choose certain rows (observations) in our dataset.
 
 Here are the relevant commands used in the `filter` function. Add some notes to designate what these commands mean. 
-`==`
-`!=`
-`<`
-`<=`
-`>`
-`>=`
-`&`
-`|`
+`==` #compare values to a specific value
+`!=` #not equal/different
+`<` #less than
+`<=`#less than equal to
+`>`#greater than
+`>=` #greater than or equal
+`&` #and 
+`|` #or
 
 ```{r filtering data}
 class(NTL.phys.data$lakeid)
@@ -126,8 +126,8 @@ Question: Why don't we filter using row numbers?
 Arranging allows us to change the order of rows in our dataset. By default, the arrange function will arrange rows in ascending order.
 
 ```{r arranging data}
-NTL.phys.data.depth.ascending <- arrange(NTL.phys.data, depth)
-NTL.phys.data.depth.descending <- arrange(NTL.phys.data, desc(depth))
+NTL.phys.data.depth.ascending <- arrange(NTL.phys.data, depth) #default is ascending order 
+NTL.phys.data.depth.descending <- arrange(NTL.phys.data, desc(depth)) 
 
 # Exercise: 
 # Arrange NTL.phys.data by temperature, in descending order. 
