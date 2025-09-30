@@ -65,7 +65,7 @@ EPA_PM25_2019 <- read.csv(
 dim(EPA_air_2018)
 dim(EPA_air_2019)
 dim(EPA_PM25_2018)
-dim(EPA_PM25_2018)
+dim(EPA_PM25_2019)
 
 
 ```
@@ -99,7 +99,8 @@ str(EPA_PM25_2018$Date)
 str(EPA_PM25_2019$Date)
 
 #4 
-#four new data frames with the following columns: Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE
+#four new data frames with the following columns: Date, DAILY_AQI_VALUE, 
+#Site.Name, AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE
 EPA_air_2018_subset <- select(EPA_air_2018, Date, DAILY_AQI_VALUE, Site.Name, 
                               AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
 EPA_air_2019_subset <- select(EPA_air_2019, Date, DAILY_AQI_VALUE, Site.Name, 
@@ -118,10 +119,14 @@ EPA_PM25_2019_subset <- mutate(EPA_PM25_2019_subset,
 
 #6
 #Save all four processed datasets in the Processed folder
-write.csv(EPA_air_2018_subset, row.names = FALSE, file = "./Data/Processed/EPAair_O3_NC2018_processed.csv")
-write.csv(EPA_air_2019_subset, row.names = FALSE, file = "./Data/Processed/EPAair_O3_NC2019_processed.csv")
-write.csv(EPA_PM25_2018_subset, row.names = FALSE, file = "./Data/Processed/EPAair_PM25_NC2018_processed.csv")
-write.csv(EPA_PM25_2019_subset, row.names = FALSE, file = "./Data/Processed/EPAair_PM25_NC2019_processed.csv")
+write.csv(EPA_air_2018_subset, row.names = FALSE, 
+          file = "./Data/Processed/EPAair_O3_NC2018_processed.csv")
+write.csv(EPA_air_2019_subset, row.names = FALSE, 
+          file = "./Data/Processed/EPAair_O3_NC2019_processed.csv")
+write.csv(EPA_PM25_2018_subset, row.names = FALSE, 
+          file = "./Data/Processed/EPAair_PM25_NC2018_processed.csv")
+write.csv(EPA_PM25_2019_subset, row.names = FALSE, 
+          file = "./Data/Processed/EPAair_PM25_NC2019_processed.csv")
 
 ```
 
@@ -161,17 +166,20 @@ EPA_Air_Join <- rbind(EPA_air_2018_subset, EPA_air_2019_subset, EPA_PM25_2018_su
 #8 
 EPA_Air_Join_Processed <- 
   #filter for the common sites 
-    EPA_Air_Join %>% filter(Site.Name %in% c("Linville Falls", "Durham Armory", "Leggett", "Hattie Avenue",  
-                                              "Clemmons Middle", "Mendenhall School", "Frying Pan Mountain", 
-                                              "West Johnston Co.", "Garinger High School", "Castle Hayne", 
-                                              "Pitt Agri. Center", "Bryson City", "Millbrook School")
+    EPA_Air_Join %>% filter(Site.Name %in% c("Linville Falls", 
+                          "Durham Armory", "Leggett", "Hattie Avenue",  
+                          "Clemmons Middle", "Mendenhall School", 
+                          "Frying Pan Mountain", "West Johnston Co.", 
+                          "Garinger High School", "Castle Hayne", 
+                          "Pitt Agri. Center", "Bryson City", "Millbrook School")
                             ) %>% 
   #split-apply-combine strategy , first group data 
   group_by(Date, Site.Name, COUNTY, AQS_PARAMETER_DESC) %>% 
   filter(!is.na(DAILY_AQI_VALUE) & !is.na(SITE_LATITUDE) & !is.na(SITE_LONGITUDE)) %>% 
   summarise(DAILY_AQI_VALUE = mean(DAILY_AQI_VALUE),
     SITE_LATITUDE = mean(SITE_LATITUDE),
-    SITE_LONGITUDE = mean(SITE_LONGITUDE)) %>% 
+    SITE_LONGITUDE = mean(SITE_LONGITUDE)) %>%
+  #add month and year columns using mutate  
   mutate(Month = month(Date),
          Year = year(Date))
 
@@ -180,7 +188,8 @@ EPA_Air_Join_Processed <-
 
 
 #9
-#spread so that the AQI values for ozone and PM2.5 are in separate columns, each location on a specific date should now occupy only one row 
+#spread so that the AQI values for ozone and PM2.5 are in separate columns
+#each location on a specific date should now occupy only one row 
 EPA_air_spread <- EPA_Air_Join_Processed %>% 
   pivot_wider(names_from = AQS_PARAMETER_DESC, values_from = DAILY_AQI_VALUE )
 
@@ -190,7 +199,8 @@ dim(EPA_air_spread)
 
 #11
 #save file to processed data folder
-write.csv(EPA_air_spread, row.names = FALSE, file = "./Data/Processed/EPAair_O3_PM25_NC1819_Processed.csv")
+write.csv(EPA_air_spread, row.names = FALSE, 
+          file = "./Data/Processed/EPAair_O3_PM25_NC1819_Processed.csv")
 
 ```
 
@@ -212,18 +222,8 @@ EPA_Air_Summary <- EPA_air_spread %>%
     )%>% 
   drop_na(Ozone)
 
-#test using na.rm, so months with some NAs still have averages 
-EPA_Air_Summary_test <- EPA_air_spread %>% 
-  group_by(Site.Name, Month, Year) %>% 
-  summarise(
-    PM2.5 = mean(PM2.5, na.rm = TRUE),
-    Ozone = mean(Ozone, na.rm = TRUE)
-    )%>% 
-  drop_na(Ozone)
-
 #13
 dim(EPA_Air_Summary)
-dim(EPA_Air_Summary_test)
 
 
 ```
