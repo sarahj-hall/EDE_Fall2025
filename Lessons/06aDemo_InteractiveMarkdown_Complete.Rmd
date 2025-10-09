@@ -1,0 +1,257 @@
+---
+title: 'Demo: Interactive R Markdown'
+author: Environmental Data Analytics | John Fay & Luana Lima 
+date: "spring 2025"
+output: html_document
+runtime: shiny
+editor_options: 
+  chunk_output_type: console
+---
+
+## Overview
+RMarkdown is a powerful tool for creating dynamic documents that combine code, text, and graphics. With the addition of widgets, it's possible to make these documents even more interactive and engaging. In this lesson, we will explore how to create interactive HTML files using RMarkdown widgets.
+
+## LESSON OBJECTIVES
+
+1. Create plotting functions that accept variables
+2. Use widgets from the `shiny` library to make interactive HTML documents
+
+## 1. Using variables in plotting code
+
+### Set up the coding environment
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+#Load packages
+library(tidyverse);library(here);library(lubridate)
+
+#Load data
+nutrient_data <- read.csv(
+  here('Data/Processed_KEY','NTL-LTER_Lake_Nutrients_PeterPaul_Processed.csv'),
+  stringsAsFactors = TRUE)
+
+#Fix dates
+nutrient_data$sampledate = ymd(nutrient_data$sampledate)
+
+#Set a default plotting theme
+my_theme <- theme_classic(base_size = 12) +
+  theme(
+      panel.grid.major = element_line(color = "gray", linewidth = 0.5),
+      panel.grid.minor = element_line(color = "lightgray", linewidth = 0.25),
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+    )
+
+theme_set(my_theme)
+
+```
+
+
+### Create a base plot
+We will plot Total P as a function of time, coloring data by depth, and symbolizing by lake.
+```{r Create base plot, echo=FALSE, eval=FALSE, warning=FALSE}
+#Construct the plot
+my_plot <- nutrient_data %>% 
+  filter(year4 > 1990 & year4 < 2016) %>% 
+  ggplot(aes(
+    x = sampledate,
+    y = tp_ug,
+    color = depth,
+    shape = lakename)) +
+  geom_point(alpha = 0.4, size = 2) +
+  scale_x_date(
+    date_breaks = "1 years",
+    date_labels = '%Y') +
+  scale_shape_manual(values = c(17, 15)) +
+  labs(
+    title = "Concentration over time, by depth and lake",
+    x = "Date", 
+    y = expression(Concentration ~ (mu*g / L)), 
+    shape = "Lake", 
+    color = "Depth (m)") +
+  scale_color_viridis_c(
+    option = "mako", 
+    guide = guide_colorbar(reverse = T),
+    direction = -1)
+
+#View the plot
+my_plot
+```
+
+
+### Using variables in plots
+
+Now tweak the above code so that the variable we plot (`tp_ug`) is specified as a variable rather than hard coded in our ggplot command. We will also set the start and end dates to variables as well. 
+
+To do this we need to convince R that the value we associate with the `y` aesthetic is a variable, not a column name. This is done by the odd convention of inserting the variable within the code `!!sym()`. The `!!` (pronounced "bang-bang") combined with `sym()` are "Tidy eval helpers" necessary because tidy-R does away with quotations. See more info [here](https://ggplot2.tidyverse.org/reference/tidyeval.html).
+
+```{r Tweak plot to use variables, echo=FALSE, eval=FALSE, warning=FALSE}
+#Create variables
+the_parameter <- 'tp_ug'
+start_year <- 1990
+end_year <- 2016
+
+#Construct the plot
+my_plot2 <- nutrient_data %>% 
+  filter(year4 > start_year & year4 < end_year) %>% 
+  ggplot(aes(
+    x = sampledate,
+    #y = .data[[the_parameter]], #-or-
+    y = !!sym(the_parameter),
+    color = depth,
+    shape = lakename)) +
+  geom_point(alpha = 0.4, size = 2) +
+  scale_x_date(
+    date_breaks = "1 years",
+    date_labels = '%Y') +
+  scale_shape_manual(values = c(17, 18)) +
+  labs(
+    title = "Concentration over time, by depth and lake",
+    x = "Date", 
+    y = expression(Concentration ~ (mu*g / L)), 
+    shape = "Lake", 
+    color = "Depth (m)") +
+  scale_color_viridis_c(
+    option = "mako", 
+    guide = guide_colorbar(reverse = T),
+    direction = -1)
+
+my_plot2
+```
+
+
+### Creating functions to generated plots with specific inputs
+
+Next, we'll one of the uses of using variables in our plotting commands: we'll create a function to generate our plot, making it super easy to make repeate plots with slight modifications. 
+
+To do this, rather than setting our variable values in the code chunk, we just set them as inputs to a function. Then we can copy and paste out plotting code above as the code the function executes (i.e. between the `{ }`). From there, we just call the function with the inputs we want to generate a plot. 
+
+```{r Plot Functions, echo=FALSE, warning=FALSE}
+#Create plotting function
+plot_it <- function(the_parameter,start_year,end_year){
+  #Plot the values given
+  nutrient_data %>% 
+    filter(year4 > start_year & year4 < end_year) %>% 
+    ggplot(aes(
+      x = sampledate,
+      #y = .data[[the_parameter]], #-or-
+      y = !!sym(the_parameter),
+      color = depth,
+      shape = lakename)) +
+    geom_point(alpha = 0.4, size = 2) +
+    scale_x_date(
+      date_breaks = "1 years",
+      date_labels = '%Y') +
+    scale_shape_manual(values = c(17, 18)) +
+    labs(
+      title = "Concentration over time, by depth and lake",
+      x = "Date", 
+      y = expression(Concentration ~ (mu*g / L)), 
+      shape = "Lake", 
+      color = "Depth (m)") +
+    scale_color_viridis_c(
+      option = "mako", 
+      guide = guide_colorbar(reverse = T),
+      direction = -1)
+}
+
+#Now run the plot function
+plot_it('tn_ug',1995,2005)
+```
+
+
+## 2. Interactive R with Shiny Widgets
+
+### Using the RMarkdown Cheat Sheet
+Have a look at the RMarkdown cheat sheet (`Help`>`Cheat Sheets`>`RMarkdown Cheat Sheet`). Note in the lower right corner of the second page, the section on `Interactivity`. I've copied the code in this section to the Rmd document called `Demo_WidgetDemo.Rmd`. Open that document and have a look.
+
+-   Notice that there's no Knit menu; it has been replaced by `Run Document`
+-   Run the document: A web page appears
+-   Change the value in the `How many cars?` section and see how the page responds. 
+-   Close the browser window or hit the stop sign in the Console to end the interactive session. 
+
+If you look at the code in the document, perhaps you can see how it relates to what appeared on the interactive page. If not, no worries. We'll explore some more..
+
+
+### Making This Rmd Document Interactive
+
+[*** You may want to stage and commit this document before moving on... ***]
+
+#### Edit the YAML to switch the Rmd to be interactve
+To enable your document to be run (instead of knit) you must alter your `YAML` section, that region in the very top surrounded by `---`. 
+
+-   Change `output: pdf_document` to be `output: html_document`
+-   Just below that line, add a new line: `runtime: shiny`
+-   Save your Rmd and the `Run Document` option should appear.
+
+#### Check that code chunks are/are not dispayed or run as desired.
+Before running our script, check the setting of each code chunk. In particular, note which ones are not shown in the output (echo=FALSE), not run (eval=FALSE), have warnings suppressed (warning=FALSE). This is useful for streamlining your output while not having to delete code. Note, however, that all markdown (the text outside the code chunks) will still appear in the output. We'd have to delete that, but we'll just ignore it for now. 
+
+#### Add and explore our interactive code
+Copy the code chunk from the `Demo_WidgetDemo.Rmd` and paste into the chunk below. 
+
+```{r, echo = FALSE, eval=FALSE}
+numericInput("n",
+"How many cars?", 5)
+
+renderTable({
+head(cars, input$n)
+})
+```
+
+Run the document. Along with all the Markdown, you'll see the same interactive app as before. 
+
+#### Anatomy of an interaction: Widgets and Renderer
+For interaction, we need a **widget** and typically a **renderer**. 
+
+A widget constructs an interface prompting a user for input at runtime. The widget we just used is the `numericInput()` widget and it asks the user to provide a number. View the help on the `numericInput()` widget. The widget parameters included in our code are:
+-   `n` is the a variable name associated with the value the user provides (`inputId`)
+-   `How many cars?` is the prompt shown with the widget (`label`)
+-   `5` is the default value assigned to `n` (`value`)
+  
+A renderer listens for any changes in the webpage; for example if the user changes the number in the `numericInput` widget. If it detects a change, code associated with the renderer runs. The renderer in our code is `renderTable()`, which as its name implies, renderes a table. 
+The data used to populate the table is generated from the code inside the curly braces: `head(cars, input$n)`. In other words, it's going to create a table showing the first few rows of the "cars" dataframe. How many rows shown is defined by the `input$n` expression. And `input$n` gets its value from the widget (input) with the named variable "n", i.e. the value in our `numericInput()` widget. 
+
+-   So, try modifying the variable name in the first line of code, changing `n` to `user_val`. For the renderer to get the correct value, `input$n` will have to also be updated to `input$user_val`.
+
+-   Alternatively, add another renderer to the code: `renderPrint()` which simply prints a message. Set the argument to `print(paste("You selected",input$n)`. It should simply print the value selected in the `numericInput()` widget. 
+
+#### Other widgets
+Shiny has many other input widgets: https://shiny.rstudio.com/gallery/widget-gallery.html. Below we'll use a Select Box widget to specify the variable shown in our plot. We'll also add a slider range to limit the date shown in our plot. 
+
+>Which widgets would be appropriate for the inputs to our plotting function? 
+
+### Creating our interactive plotting app
+Now we'll create code that will call our plotting function, but with inputs derived from widgets! We'll use a `selectInput()` widget to set the nutrient that we want to plot, and a `sliderRange()` widget to set the start and end year to plot. And then we'll insert our `plot_it()` function created above within a `renderPlot()` renderer to show out plot!
+
+Note: Before running this plot, set the previous code chunk to not evaluate
+
+```{r widget exploration, echo=FALSE}
+# Create a selectInput widget to select which nutrient to display in the plot
+selectInput(
+  inputId =  "the_parameter",
+  label = "Select the nutrient to show",
+  choices = c('tn_ug','tp_ug','nh34','no23','po4'),
+  selected = 'tn_ug'
+)
+
+# Create a sliderInput to set the date range
+sliderInput(
+  inputId = 'yearSlider',
+  label = 'Select a date range',
+  min = min(nutrient_data$year4),
+  max = max(nutrient_data$year4),
+  step = 1,
+  round=T,
+  value = c(min(nutrient_data$year4),max(nutrient_data$year4))
+)
+
+# Create a renderPlot object to display the plot 
+# created with the plot_it function
+renderPlot(
+  plot_it(
+    input$the_parameter,
+    input$yearSlider[1],
+    input$yearSlider[2]
+    )
+)
+```
+
