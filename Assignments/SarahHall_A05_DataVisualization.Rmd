@@ -138,7 +138,7 @@ Tips:
 * Setting a legend's position to "none" will remove the legend from a plot.
 * Individual plots can have different sizes when combined using `cowplot`.
 
-```{r Create boxplots final_plot, fig.height = 10, fig_width = 6}
+```{r Create boxplots final_plot, fig.height = 12, fig_width = 6}
 #5 
 #set theme for the boxplots to cowplot, reduce axis text size and remove legend 
 theme_set(theme_cowplot() + theme (
