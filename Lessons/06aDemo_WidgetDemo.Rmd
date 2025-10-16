@@ -5,8 +5,12 @@ runtime: shiny
 ---
   
 ```{r, echo = FALSE}
+
+#widget, interactive interface, select input
 numericInput("n",
 "How many cars?", 5)
+
+#code that will be executed 
 renderTable({
 head(cars, input$n)
 })

@@ -94,6 +94,7 @@ my_plot2 <- nutrient_data %>%
   filter(year4 > start_year & year4 < end_year) %>% 
   ggplot(aes(
     x = sampledate,
+    #can't differentiate that it's not a column, 
     #y = .data[[the_parameter]], #-or-
     y = !!sym(the_parameter),
     color = depth,
@@ -154,7 +155,7 @@ plot_it <- function(the_parameter,start_year,end_year){
 }
 
 #Now run the plot function
-plot_it('tn_ug',1995,2005)
+plot_it('po4',1995,2002)
 ```
 
 
@@ -230,7 +231,7 @@ selectInput(
   inputId =  "the_parameter",
   label = "Select the nutrient to show",
   choices = c('tn_ug','tp_ug','nh34','no23','po4'),
-  selected = 'tn_ug'
+  selected = 'no23'
 )
 
 # Create a sliderInput to set the date range

@@ -1,0 +1,135 @@
+---
+title: "Crafting Reports"
+subtitle: "ENV 859 - Environmental Data Exploration"
+author: "John Fay & Luana Lima"
+date: "Fall 2025"
+output:  ioslides_presentation 
+---
+
+## Learning Outcomes
+-   Explain why we use RMarkdown & knit to PDF
+-   Navigate YAML & use it to enhance to your documents
+-   Control how *code* appears in knit output:\
+    code chunk settings
+-   Control how *text* appears in knit output:\
+    markdown techniques
+-   Understand the knitting process and\
+    how it converts Rmd to PDF, HTML, etc.
+
+## Use of RStudio & RMarkdown so far...
+-   We have provided you with Rmd files
+-   Write/edit code (code chunks)
+-   Document that code (text blocks)
+-   Generate PDFs of code and its outputs
+-   Integrate with Git/GitHub for version control
+
+## Advantanges of RMarkdown
+### Why do we use RMarkdown?
+-   Written in basic text (fully reproducible)
+-   Works well with version control
+-   Allows for code and documentation in one file
+-   When knit, can produce tidy output in many file formats
+
+## RMarkdown: A deeper look
+### The three components of RMarkdown
+-   YAML
+-   Text (markdown)
+-   Code (R or ???)
+
+## YAML: What is it?
+-   "Yet another markdown language"\
+    "YAML ain't markdown language"
+-   Always at the beginning of an Rmd
+-   Enclosed by three dashes `---`
+-   Includes instructions applied when knitting
+-   Instructions take the form of `key`:`value` pairs
+
+## YAML, An Exercise
+1.  Create a new Rmd in R
+2.  Set the title, author, date
+3.  Set output to be PDF
+4.  View the YAML in the Rmd produced
+5.  Knit the document & view the PDF
+6.  Add new entries:
+    -   `subtitle: "A draft copy"`
+    -   `toc: true`
+7.  Add a few markdown headers (`##`)
+8.  Knit and view...
+
+## YAML, A Recap
+-   YAML setting apply to the entire document
+-   YAML is read in the knit process
+-   YAML has even more advanced settings\
+    [Markdown Cheat sheet](https://raw.githubusercontent.com/rstudio/cheatsheets/main/rmarkdown.pdf)\
+    <https://bookdown.org/yihui/rmarkdown/pdf-document.html>
+
+## The knitting process
+-   The knitting sequence [![image link](img/rmarkdownflow.png)](https://env872.github.io/assets/images/rmarkdownflow.png)
+-   `Rmd`→[*knitr*]→`md`:\
+    Guided by instructions in YAML & Code chunks
+-   `md`→[*Pandoc*]→`PDF`:\
+    Markdown translated into PDF\|HTML\|Word\|... by Pandoc
+-   Example...
+
+## Code Chunks: Recap
+-   Where code is executed
+-   Surrounded by triplets of tics: ```` ``` ````
+-   Chunks have attributes, set within `{  }`\
+    For example: `{r plot AQI, echo=FALSE}`
+
+## Code Chunks: Example
+-   Shortcuts to create
+-   Coding languages
+-   Setting chunk attributes
+    - <https://yihui.org/knitr/options/#chunk-options>
+    - <https://bookdown.org/yihui/rmarkdown/r-code.html>
+-   Global code chunk attributes\
+    `knitr::opts_chunk$set(echo = TRUE)`
+    
+## Code Chunks: Plots and Figures
+-   `fig.cap`: Set figure Caption
+-   `fig.width`, `fig.height`: Set figure size, or...
+-   `fig.dim` to set both (e.g. `fig.dim = c(5,3)`)
+-   `out.width`, `out.height`: scale figs in output docs\
+    e.g. `out.width=80%` to set at 80% of page width
+-   `fig.align`: set alignment (`left', 'center', etc.)
+
+## Markdown: Recap
+###   Common stylings:
+-   `#`: headings
+-   `>`: block quotes
+-   Ordered and unordered lists...
+-   Hyperlinks...
+
+## Markdown: Documentation
+-   Quick reference
+-   Cheatsheet
+-   Reference Guide
+
+## Markdown: Exercises
+-   Creating tables
+-   Inserting images
+-   Additional text formatting
+
+## Markdown: Useful techniques
+-   `\newpage`
+-   `\listoftables`
+-   `\listoffigurres`
+-   `---`
+-   Using the *Visual Editor*!
+
+## Pretty tables with `kable`
+-   Part of the `knitr` package
+-   Convert a dataframe to a markdown table\
+    Makes for aethetic output
+-   Example...
+
+## Exercises!
+-   Open `06b_Exercise_Markdown.Rmd` and knit as is
+-   Add a table of contents
+-   Set the first code chunk to run, but:
+    -  code is not shown in knit output
+    -  warnings are not shown in output 
+-	Show summary dataframes as tables (using `kable`)
+-	Add a list of tables using `\listoftables`
+    

@@ -1,0 +1,46 @@
+---
+title: "Exercise: Markdown"
+author: "Environmental Data Analytics | John Fay and Luana Lima "
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+## Set up the coding environment
+
+```{r setup}
+#Load packages
+library(tidyverse);library(here);library(lubridate)
+
+#Load data
+nutrient_data_raw <- read.csv(
+  here('Data/Processed_KEY','NTL-LTER_Lake_Nutrients_PeterPaul_Processed.csv'),
+  stringsAsFactors = TRUE)
+
+#Fix dates
+nutrient_data_raw$sampledate = ymd(nutrient_data_raw$sampledate)
+
+```
+
+## Wrangle the data
+
+```{r wrangle}
+#Subset columns and rows
+nutrient_data <- nutrient_data_raw %>% 
+  select(-c(lakeid,depth_id,comments)) %>% 
+  filter(depth == 0) %>% 
+  drop_na()
+
+#Compute summary stats for total nitrogen
+nutrient_data_tn <- nutrient_data %>% 
+  group_by(lakename) %>% 
+  summarize(
+    mean_tn_ug = mean(tn_ug),
+    min_tn_ug = min(tn_ug),
+    max_tn_ug = max(tn_ug),
+    sd_tn_ug = sd(tn_ug)
+  )
+```
+
+## Report the summary
