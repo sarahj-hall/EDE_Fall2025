@@ -3,7 +3,10 @@ title: 'A06 - Crafting Reports'
 author: "Sarah Hall" 
 date: "Fall 2025"
 output: pdf_document
+toc: TRUE
 ---
+
+\listoffigures
 
 ## Objectives:
 
@@ -25,21 +28,25 @@ output: pdf_document
 
 Using markdown, create a 2-column table beneath the `Table: EPA Air Quality` line below that summarizes the metadata of the EPA Air Quality data.
 
-- The first column should have the header `Item`, below which are three rows listing these metadata attribute item names: `Filename`, `Date`, and `Source`.
+-   The first column should have the header `Item`, below which are three rows listing these metadata attribute item names: `Filename`, `Date`, and `Source`.
 
-- The second column should have the header `Value` and include the metadata values: `EPAair_O3_PM25_NC1819_Processed.csv`, `2018-2019`, and `EPA Air Quality System (AQS)`.
+-   The second column should have the header `Value` and include the metadata values: `EPAair_O3_PM25_NC1819_Processed.csv`, `2018-2019`, and `EPA Air Quality System (AQS)`.
 
-- The first column should be aligned to the right and the second to the left.
+-   The first column should be aligned to the right and the second to the left.
 
 Table: EPA Air Quality
 
-
+Item Name  | Value
+-------------: | :-------------
+Filename | EPAair_O3_PM25_NC1819_Processed.csv
+Date  | 2018-2019
+Source | EPA Air Quality System (AQS)     
 
 ## Task 2 - Import packages and data, suppressing messages
 
 Set the following R code chunk so that it runs when knit, but no messages, errors, or any output is shown. The code itself, however, should be displayed.
 
-```{r project.setup}
+```{r project.setup, echo=TRUE, message=FALSE, warning=FALSE}
 #Import libraries
 library(tidyverse)
 library(lubridate)
@@ -53,13 +60,13 @@ epa_data <- read.csv(
   mutate(Date = ymd(Date))
 ```
 
----
+------------------------------------------------------------------------
 
 ## Task 3: Creating tables
 
-Set the following R code chunk to display two tables, using knitr's `kable()` function, one listing the mean PM2.5 concentrations for each county, and the other the same except for Ozone. 
+Set the following R code chunk to display two tables, using knitr's `kable()` function, one listing the mean PM2.5 concentrations for each county, and the other the same except for Ozone.
 
--   The titles should be "Mean Particulates (2.5mm)" and "Mean Ozone", respectively. 
+-   The titles should be "Mean Particulates (2.5mm)" and "Mean Ozone", respectively.
 -   The column names should be "County" and "µg/m3" for both tables. (See tip below.)
 -   Finally, round the concentration values in the 2nd column to two decimal places.
 
@@ -71,8 +78,7 @@ Customize the chunk options such that the code is run but is not displayed in th
 >
 > -   If your output table spans across two pages, try inserting a page break in the markdown just before your code chunk.
 
-
-```{r data.summary}
+```{r data.summary, echo=FALSE}
 #Compute mean PM2.5 concentration for each county, sorted by value
 summary_PM25 <- epa_data %>% 
   drop_na(PM2.5) %>% 
@@ -89,24 +95,91 @@ summary_Ozone <- epa_data %>%
   arrange(mean_Ozone)
 
 #Use the `kable` function to produce the 2 tables in markdown format
+kable(summary_PM25,
+      digits = 2,
+      col.names = c("County", "$\\mu g/m^3$"),
+      caption = "Mean Particulates (2.5mm)")
+kable(summary_Ozone, 
+      digits = 2,
+      col.names = c("County", "$\\mu g/m^3$"),
+      caption = "Mean Ozone")
 
 ```
 
----
+------------------------------------------------------------------------
 
 ## Task 4: Plots
 
 Below this paragraph, but above the horizonal line (`---`), create two separate code chunks that create boxplots of the distribution of Ozone levels by month using, one for only records collected in 2018 and one for records in 2019. Customize the chunk options such that the final figures are displayed but not the code used to generate the figures. In addition, align the plots on the left side of the page and set the figure heights so both plots fit on the same page with minimal space remaining. Lastly, add a `fig.cap` chunk option to add a caption (title) to your plot that will display underneath the figure.
 
+```{r boxplot1, fig.align="left", fig.height=5, fig.width=10, fig.cap="2018 Monthly Ozone Levels", echo=FALSE, message=FALSE, warning=FALSE}
 
----
+#set text size to be bigger
+theme_set(theme_classic(base_size =14))
+
+#boxplot of ozone level by month for 2018
+epa_data %>%
+  filter(Year == 2018) %>% 
+  ggplot(
+    aes(
+      x = factor(
+        Month,
+        levels = 1:12,
+        labels = month.abb),
+      y = Ozone 
+    )
+  )+
+  geom_boxplot()+
+  scale_x_discrete(
+    drop = FALSE
+  )+
+  labs(
+    title = "Monthly Ozone Concentrations (2018)",
+    y = expression("Concentration (" * mu * "g/m"^3 * ")"),
+    x = "Month"
+  )
+
+```
+
+```{r boxplot2, fig.align="left", fig.height=5, fig.width=10, fig.cap="2019 Monthly Ozone Levels", echo=FALSE, message=FALSE, warning=FALSE}
+#boxplot of ozone level by month for 2019
+epa_data %>%
+  filter(Year == 2019) %>% 
+  ggplot(
+    aes(
+      x = factor(
+        Month,
+        levels = 1:12,
+        labels = month.abb),
+      y = Ozone 
+    )
+  )+
+  geom_boxplot()+
+  scale_x_discrete(
+    drop = FALSE
+  )+
+  labs(
+    title = "Monthly Ozone Concentrations (2019)",
+    y = expression("Concentration (" * mu * "g/m"^3 * ")"),
+    x = "Month"
+  )
+
+```
+
+
+------------------------------------------------------------------------
 
 \newpage
 
 ## Task 5: Knit and submit.
 
-Add a table of contents and list of figures to your document and knit to a PDF. Submit your PDF to Sakai, but also be sure to commit and push your Rmd file used to create this knit document to GitHub. In the section below, add a link to your GitHub repository. **Lastly, add the statement that you did not use AI in the completion of this assignment followed by your name and the date.** 
+Add a table of contents and list of figures to your document and knit to a PDF. Submit your PDF to Sakai, but also be sure to commit and push your Rmd file used to create this knit document to GitHub. In the section below, add a link to your GitHub repository. **Lastly, add the statement that you did not use AI in the completion of this assignment followed by your name and the date.**
 
 ## Git Repository
+https://github.com/sarahj-hall/EDE_Fall2025
 
-I did not use AI to complete this assignment 
+## AI Statement
+I did not use AI to complete this assignment.  
+- Sarah Hall  
+- 10/19/2025
+

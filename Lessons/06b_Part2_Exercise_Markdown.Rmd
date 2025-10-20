@@ -5,11 +5,12 @@ output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
   chunk_output_type: console
+toc: true
 ---
 
 ## Set up the coding environment
 
-```{r setup}
+```{r setup, warning = FALSE, echo = FALSE, include=FALSE}
 #Load packages
 library(tidyverse);library(here);library(lubridate)
 
@@ -44,3 +45,8 @@ nutrient_data_tn <- nutrient_data %>%
 ```
 
 ## Report the summary
+```{r}
+knitr::kable(nutrient_data_tn, caption = "Summary of Total Nitrogen")
+knitr::kable(nutrient_data_tn, caption = "Another of Total Nitrogen")
+```
+
