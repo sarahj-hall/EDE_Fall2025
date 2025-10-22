@@ -1,0 +1,115 @@
+---
+title: "7: Part 3 - Generalized Linear Models"
+author: "Environmental Data Analytics | John Fay and Luana Lima | Developed by Kateri Salk"
+date: "Fall 2025"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+## Objectives
+1. Describe t-test under GLM framework
+
+## Set up your session
+
+```{r, message = FALSE}
+library(tidyverse)
+library(lubridate)
+library(here)
+here()
+```
+
+## T-Test
+
+Continuous response, one categorical explanatory variable with two categories (or comparison to a single value if a one-sample test).
+
+### Formulating Hypothesis for µ
+
+Two hypotheses are formed – the null hypothesis and the alternative hypothesis.
+The null hypothesis and the alternative hypothesis combine to cover all possible values for the population mean.
+The null hypothesis must have the equality.
+The null and alternative hypotheses are always stated in terms of the population mean (mu).
+
+### One-sample t-test
+The object of a one sample test is to test the null hypothesis that the mean of the group is equal to a specific value. 
+
+Function t.test()
+**x**	a (non-empty) numeric vector of data values.
+**alternative** a character string specifying the alternative hypothesis, must be one of "two.sided" (default), "greater" or "less". You can specify just the initial letter.
+**mu** a number indicating the true value of the mean (or difference in means if you are performing a two sample test).
+**formula** a formula of the form lhs ~ rhs where lhs is a numeric variable giving the data values and rhs either 1 for a one-sample or paired test or a factor with two levels giving the corresponding groups. If lhs is of class "Pair" and rhs is 1, a paired test is done.
+
+The one-sample t-test relies on the assumption that the variable is normally distributed in the population. However, the t-test is robust to mild departures from normality when the sample size is small, and when the sample size is large the normality assumption becomes less important.
+
+
+For example, we might ask ourselves (from the EPA air quality processed dataset): 
+Are Ozone levels below the threshold for "good" AQI index (0-50)?
+
+### Import data set
+
+```{r, message = FALSE}
+EPAair <- read.csv(here("Data/Processed_KEY/EPAair_O3_PM25_NC1819_Processed.csv"), stringsAsFactors = TRUE)
+# Set date to date format
+EPAair$Date <- as.Date(EPAair$Date, format = "%Y-%m-%d")
+
+```
+
+
+> Exercise 1: State the hypotheses for testing mean of AQI index.
+
+> Answer: 
+H0: mu >= 50
+Ha: mu < 50
+
+```{r}
+summary(EPAair$Ozone) #mean = 40.88 and median = 40
+length(EPAair$Ozone) #8976 observations
+
+O3.onesample <- t.test(EPAair$Ozone, mu = 50, alternative = "less")
+O3.onesample
+
+Ozone.plot <- ggplot(EPAair, aes(x = Ozone)) +
+  geom_density(fill = "gray") +
+  geom_vline(xintercept = 50, color = "#238b45", lty = 2, size = 0.9) +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0))
+print(Ozone.plot)
+
+# Format as a GLM
+O3.onesample2 <- lm(Ozone ~ 1, EPAair)
+O3.onesample2
+```
+
+Write a sentence or two about the results of this test. Include both the results of the test and an interpretation that puts the findings in context of the research question.
+
+> 
+
+### Two-sample t-test
+
+The two-sample *t* test is used to test the hypothesis that the mean of two samples is equivalent. Unlike the one-sample tests, a two-sample test requires a second assumption that the variance of the two groups is equivalent. 
+
+For example, we might ask ourselves (from the EPA air quality processed dataset): 
+Are Ozone levels different between 2018 and 2019?
+
+```{r}
+#First let's look at the data
+ggplot(EPAair, aes(x = Ozone, color = as.factor(Year))) +
+  geom_freqpoly()
+
+#Format as a t-test
+#EPAair$Ozone will be our continuous dependent variable
+#EPAair$Year will be our categorical variable with two levels (2018 and 2019)
+O3.twosample <- t.test(EPAair$Ozone ~ EPAair$Year)
+O3.twosample
+
+# Format as a GLM
+O3.twosample2 <- lm(EPAair$Ozone ~ EPAair$Year)
+summary(O3.twosample2)
+
+```
+
+
+
+
+
