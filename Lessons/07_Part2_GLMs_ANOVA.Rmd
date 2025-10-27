@@ -39,6 +39,7 @@ A one-way ANOVA is used when you have one categorical explanatory variable with 
 For example: Does total litter biomass differ among sites at the Niwot Ridge LTER?
 ```{r}
 # Wrangle the data
+#group and summarize dry mass
 Litter.Totals <- Litter %>%
   group_by(plotID, collectDate, nlcdClass) %>%
   summarise(dryMass = sum(dryMass))
@@ -52,6 +53,7 @@ summary(Litter.Totals$plotID)
 # not necessarily normality of raw data. See below when we plot the model.
 # shapiro.test() performs the Shapiro-Wilk test of the null that data follows a normal distribution
 
+#filter data inside of the function for site ID 
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_040"])
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_041"])
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_046"])
@@ -77,6 +79,7 @@ bartlett.test(Litter.Totals$dryMass ~ Litter.Totals$plotID)
 #results: reject null i.e. variances are not equal
 
 # Format ANOVA as aov
+#func aov 
 Litter.Totals.anova <- aov(data = Litter.Totals, dryMass ~ plotID)
 summary(Litter.Totals.anova)
 
@@ -95,6 +98,8 @@ plot(Litter.Totals.anova2)
 TukeyHSD(Litter.Totals.anova)
 
 # Extract groupings for pairwise relationships
+#hsd tries to find groups across the different levels that have a similiar mean
+#group = true, group levels with same mean 
 Litter.Totals.groups <- HSD.test(Litter.Totals.anova, "plotID", group = TRUE)
 Litter.Totals.groups
 
@@ -112,7 +117,7 @@ print(Litter.Totals.plot)
 
 What information does the output give us? How might we report this information in a report?
 
-> 
+> re-order plot with same order as hsd.test 
 
 ## TWO-WAY ANOVA
 

@@ -78,17 +78,20 @@ irradiance.regression <-
        PeterPaul.chem.nutrients$depth)
 
 # another way to format the lm() function
+#provide data frame first, preferred way (can call multiple variables)
 irradiance.regression <- lm(
   data = PeterPaul.chem.nutrients,
   irradianceWater ~ depth)
-summary(irradiance.regression)
+summary(irradiance.regression) #ask for summary
 
 # Correlation
 cor.test(PeterPaul.chem.nutrients$irradianceWater, PeterPaul.chem.nutrients$depth)
 ```
 Question: How would you report the results of this test (overall findings and report of statistical output)?
 
->  
+>  slope of coefficient line = -95.809 (negative relationship -> increase depth, decrease light)
+p-value < 0.05, our coefficients are statistically different than zero, it's worthwhile trying to 
+estimate the light level of lakes based on depth. 
 
 So, we see there is a significant negative correlation between irradiance and depth (lower light levels at greater depths), and that this model explains about 31 % of the total variance in irradiance. Let's visualize this relationship and the model itself. 
 
@@ -103,6 +106,7 @@ An exploratory option to visualize the model fit is to use the function `plot`. 
 4. **Residuals vs. Leverage.** This graph will display potential outliers. The values that fall outside the dashed red lines (Cook's distance) are outliers for the model. Watch for drastic departures of the solid red line from horizontal - this is a sign of a poor model fit.
 
 ```{r, fig.height = 3, fig.width = 4}
+#divide screen into 4 graphs 
 par(mfrow = c(2,2), mar=c(4,4,4,4))
 plot(irradiance.regression)
 par(mfrow = c(1,1))
@@ -122,6 +126,7 @@ print(irradiancebydepth)
 Given the distribution of irradiance values, we don't have a linear relationship between x and y in this case. Let's try log-transforming the irradiance values. Note we also removing the observations that seems to ba an outlier.
 
 ```{r, fig.height = 3, fig.width = 4}
+#filter dataset, eliminate 0s 
 PeterPaul.chem.nutrients <- filter(PeterPaul.chem.nutrients, 
                                    irradianceWater != 0 & irradianceWater < 5000)
 irradiance.regression2 <- lm(data = PeterPaul.chem.nutrients, log(irradianceWater) ~ depth)
@@ -135,7 +140,7 @@ par(mfrow = c(1,1))
 irradiancebydepth2 <- 
   ggplot(PeterPaul.chem.nutrients, aes(x = depth, y = irradianceWater)) +
   geom_smooth(method = "lm") +
-  scale_y_log10() +
+  scale_y_log10() +    #add log scale on y 
   geom_point() 
 print(irradiancebydepth2) 
 
@@ -155,6 +160,7 @@ print(irradiancebydepth2)
 It is possible, and often useful, to consider multiple continuous explanatory variables at a time in a linear regression. For example, total phosphorus concentration in Paul Lake (the unfertilized lake) could be dependent on depth and dissolved oxygen concentration: 
 
 ``` {r, fig.height = 3, fig.width = 4}
+#same lm function, call data and specific subset (lake name), formula, vars 
 TPregression <- lm(data = subset(PeterPaul.chem.nutrients, lakename == "Paul Lake"), 
                    tp_ug ~ depth + dissolvedOxygen)
 summary(TPregression)
@@ -177,12 +183,17 @@ We can also make exploratory plots of several continuous data points to determin
 ```{r, fig.height = 3, fig.width = 4}
 #install.packages("corrplot")
 library(corrplot)
+
+#just include columns of interest, omit NAs
 PeterPaulnutrients <- 
   PeterPaul.chem.nutrients %>%
   select(tn_ug:po4) %>%
   na.omit()
 PeterPaulCorr <- cor(PeterPaulnutrients)
+#thinner scatter plot, shape = represent the scatter plot of one against another, thinner = most linear. color strength and sign = -1 (red) to 1 (blue)
 corrplot(PeterPaulCorr, method = "ellipse")
+
+#mirror matrix, so show the number and shape 
 corrplot.mixed(PeterPaulCorr, upper = "ellipse")
 ```
 
@@ -202,6 +213,9 @@ TPAIC <- lm(data = Paul.naomit, tp_ug ~ depth + dissolvedOxygen +
 
 #Choose a model by AIC in a Stepwise Algorithm
 step(TPAIC)
+#show full regression 
+#for removing each variable, what is the AIC (looking at if it's a better regression than removing none)
+#go through removing vars w/ worst AIC 
 TPmodel <- lm(data = Paul.naomit, tp_ug ~ dissolvedOxygen + temperature_C + tn_ug)
 summary(TPmodel)
 
