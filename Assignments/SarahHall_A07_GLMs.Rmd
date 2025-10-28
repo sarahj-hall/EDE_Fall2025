@@ -64,7 +64,7 @@ Ha: Mean lake temperatures in July are not the same at all depths (or temp chang
 
 5. Visualize the relationship among the two continuous variables with a scatter plot of temperature by depth. Add a smoothed line showing the linear model, and limit temperature values from 0 to 35 °C. Make this plot look pretty and easy to read.
 
-```{r scatterplot}
+```{r scatterplot, fig.align='left'}
 #4
 #wrangle data
 NTL_LTER_subset <- 
@@ -160,7 +160,7 @@ summary(tempByLake.regression)
 
 14. Create a graph that depicts temperature by depth, with a separate color for each lake. Add a geom_smooth (method = "lm", se = FALSE) for each lake. Make your points 50 % transparent. Adjust your y axis limits to go from 0 to 35 degrees. Clean up your graph to make it pretty. 
 
-```{r scatterplot.2}
+```{r scatterplot.2, fig.align='left'}
 #14.
 NTL_LTER_subset %>% 
   ggplot(aes(x = depth,
@@ -212,4 +212,4 @@ t.test(data = Crampton_Ward_LakeTTest, temperature_C ~ lakename)
 
 ```
 
->Answer: The t-test returns that p-value is 6.264e-07 which is less than 0.05, thus the null hypothesis is rejected. The alternative hypothesis is accepted that the mean temperatures between Crampton Lake and Ward Lake are statistically different. This does match my answer for part 16, where Crampton Lake is one of two lakes that is statistically distinct from all other lakes.  
+>Answer: The t-test returns that p-value is 6.264e-07 which is less than 0.05, thus the null hypothesis is rejected. The alternative hypothesis is accepted that the mean temperatures of Crampton Lake and Ward Lake are statistically different. This does match my answer for part 16, where Crampton Lake is one of two lakes that is statistically distinct from all other lakes.  
