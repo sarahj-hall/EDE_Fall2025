@@ -27,7 +27,21 @@ This exercise accompanies the lessons in Environmental Data Analytics on general
 * Set your ggplot theme
 
 ```{r}
+library(tidyverse)
+library(lubridate)
+library(zoo)
+library(trend)
+library(here)
 
+#check working directory
+here()
+
+#create mytheme, make text size bigger, axis text black, and legend on the top
+mytheme <- theme_classic(base_size = 14) 
+  theme(axis.text = element_text(color = "black"),
+        legend.position = "top")
+#set mytheme to standard theme
+theme_set(mytheme)
 ```
 
 
@@ -35,6 +49,32 @@ This exercise accompanies the lessons in Environmental Data Analytics on general
 
 ```{r, message = FALSE}
 #1
+
+#import all 10 datasets
+EPA_2010 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2010_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2011 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2011_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2012 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2012_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2013 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2013_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2014 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2014_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2015 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2015_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2016 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2016_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2017 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2017_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2018 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2018_raw.csv'),
+                     stringsAsFactors = TRUE)
+EPA_2019 <- read.csv(here('Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2019_raw.csv'),
+                     stringsAsFactors = TRUE)
+
+#combine using rbind 
+GaringerOzone <- rbind(EPA_2010, EPA_2011, EPA_2012, EPA_2013, EPA_2014,
+                       EPA_2015, EPA_2016, EPA_2017, EPA_2018, EPA_2019)
 
 ```
 
@@ -50,13 +90,24 @@ This exercise accompanies the lessons in Environmental Data Analytics on general
 
 ```{r}
 # 3
+GaringerOzone$Date <- as.Date(GaringerOzone$Date, format = "%m/%d/%Y")
 
 # 4
+GaringerOzone_Filtered <- 
+  GaringerOzone %>% 
+    select(Date, Daily.Max.8.hour.Ozone.Concentration, DAILY_AQI_VALUE)
 
 # 5
+Days <- 
+  as.data.frame(seq(from=as.Date("2010-01-01"), 
+                    to=as.Date("2019-12-31"), 
+                    by="day")) 
+#rename column to Date
+colnames(Days) <- "Date"
 
 # 6
-
+GaringerOzone1 <- 
+  left_join(Days, GaringerOzone_Filtered, by = "Date")
 
 ```
 
@@ -64,12 +115,21 @@ This exercise accompanies the lessons in Environmental Data Analytics on general
 
 7. Create a line plot depicting ozone concentrations over time. In this case, we will plot actual concentrations in ppm, not AQI values. Format your axes accordingly. Add a smoothed line showing any linear trend of your data. Does your plot suggest a trend in ozone concentration over time?
 
-```{r}
+```{r fig.align='left'}
 #7
+GaringerOzone1 %>%  
+  ggplot(
+    aes(x = Date, 
+        y = Daily.Max.8.hour.Ozone.Concentration)) +
+  geom_line() +
+  labs(
+    y = "Daily Max Ozone Concentration (ppm)",
+    title = "Daily Max Ozone Concentration From 2010 to 2019") +
+  geom_smooth(method = "lm")
 
 ```
 
->Answer:
+>Answer: The plot suggests a strong seasonal trend, as well as a slight decline in ozone concentration over the time period.
 
 ## Time Series Analysis
 
@@ -79,6 +139,7 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 
 ```{r}
 #8
+
 
 ```
 
