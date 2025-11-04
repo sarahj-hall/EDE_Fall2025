@@ -124,6 +124,8 @@ The `stl` function decomposes the time series object into its component parts. W
 
 ```{r}
 ?stl
+#univariate time series, even if you have more then 1 var, need to run decomposition for each variable (can't done more than 1 variables at a time)
+#s.window: define (s.window = periodic, specified when ts object is created), or s.window = 365 (days) s.window = 12 (months)
 # Generate the decomposition
 EnoDischarge.late_Decomposed <- stl(EnoDischarge.late_ts, s.window = "periodic")
 
@@ -131,20 +133,24 @@ EnoDischarge.late_Decomposed <- stl(EnoDischarge.late_ts, s.window = "periodic")
 plot(EnoDischarge.late_Decomposed)
 
 # We can extract the components and turn them into data frames
+#Object time series (which has seasonal, trend, and remainder)
+#create a DF with the three columns
 EnoDischarge.late_Components <- as.data.frame(EnoDischarge.late_Decomposed$time.series[,1:3])
 
+#adding two new columns, observed discharge and date
 EnoDischarge.late_Components <- mutate(EnoDischarge.late_Components,
         Observed = EnoDischarge.late$discharge.mean,     
         Date = EnoDischarge.late$datetime)
 
 # Visualize how the trend maps onto the data
 ggplot(EnoDischarge.late_Components) +
-  geom_line(aes(y = Observed, x = Date),  size = 0.25) +
-  geom_line(aes(y = trend, x = Date), color = "#c13d75ff") +
-  geom_hline(yintercept = 0, lty = 2) +
+  geom_line(aes(y = Observed, x = Date),  size = 0.25) + #observed component
+  geom_line(aes(y = trend, x = Date), color = "#c13d75ff") + #trend component (pink)
+  geom_hline(yintercept = 0, lty = 2) + #seasonal components can end up wonky w/ less than zero y?
   ylab(expression("Discharge (ft"^3*"/s)"))
 
 # Visualize how the seasonal cycle maps onto the data
+#can see that the seasonal component goes below the 0 line 
 ggplot(EnoDischarge.late_Components) +
   geom_line(aes(y = Observed, x = Date),  size = 0.25) +
   geom_line(aes(y = seasonal, x = Date), color = "#c13d75ff") +
@@ -184,6 +190,8 @@ summary(wind_data$AWND)
 
 # Adding new column with no missing obs, just for illustration purpose
 # In real applications you will simply replace NAs
+#na.approx used to replace missing data by approximation 
+#packagename::nameoffunction (don't need to library package)
 wind_data_clean <- 
   wind_data %>% 
   mutate( AWND.clean = zoo::na.approx(AWND) )
@@ -221,10 +229,11 @@ Note that wind speed has a seasonal cycle. We might be interested in knowing how
 ```{r}
 
 # Generate time series (trend test needs ts, not data.frame)
+#define first month and first year values 
 f_month <- month(first(wind_data_clean$DATE))
 f_year <- year(first(wind_data_clean$DATE))
 wind_data_ts <- ts(wind_data_clean$AWND.clean,
-                   start=c(f_year,f_month),
+                   start=c(f_year,f_month), #using defined values from above
                    frequency=12) 
 
 #decompose
@@ -235,16 +244,19 @@ plot(wind_data_decomp)
 wind_data_trend1 <- Kendall::SeasonalMannKendall(wind_data_ts)
 
 # Inspect results
+#p-value is < 0.05, so reject H0 data is stationary, there is a trend
 wind_data_trend1
 summary(wind_data_trend1)
 
-
 wind_data_trend2 <- trend::smk.test(wind_data_ts)
 # Inspect results
+#look at season changes individually, s (change) and p-value 
 wind_data_trend2
 summary(wind_data_trend2)
 
 #Visualization
+#plot wind data, add linear regression 
+#there is a negative slope, showing decrease in winds speeds over time
 wind_data_plot <-
 ggplot(wind_data, aes(x = DATE, y = AWND)) +
   geom_point() +
