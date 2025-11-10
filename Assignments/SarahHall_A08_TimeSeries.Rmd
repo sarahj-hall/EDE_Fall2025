@@ -37,7 +37,7 @@ library(here)
 here()
 
 #create mytheme, make text size bigger, axis text black, and legend on the top
-mytheme <- theme_classic(base_size = 14) 
+mytheme <- theme_classic(base_size = 12) 
   theme(axis.text = element_text(color = "black"),
         legend.position = "top")
 #set mytheme to standard theme
@@ -222,13 +222,13 @@ plot(garinger_ozone_monthly_decomp)
 ```{r}
 #12
 
-garinger_ozone_monthly_trend <- Kendall::SeasonalMannKendall(GaringerOzone.monthly.ts)
+garinger_ozone_monthly_trend <- trend::smk.test(GaringerOzone.monthly.ts)
 garinger_ozone_monthly_trend
 summary(garinger_ozone_monthly_trend)
 
 ```
 
-> Answer: The seasonal Mann-Kendall trend analysis is most appropriate because there is a clear seasonal trend in the monthly ozone data series.
+> Answer: The seasonal Mann-Kendall trend analysis is most appropriate because there is a clear seasonal trend in the monthly ozone data series and we want to understand how ozone levels have changed longterm while incorporating the seasonal component.
 
 13. Create a plot depicting mean monthly ozone concentrations over time, with both a geom_point and a geom_line layer. Edit your axis labels accordingly.
 
@@ -252,7 +252,7 @@ GaringerOzoneMonthly %>%
 
 14. To accompany your graph, summarize your results in context of the research question. Include output from the statistical test in parentheses at the end of your sentence. Feel free to use multiple sentences in your interpretation.
 
-> Answer: Mean monthly ozone concentrations at Garinger High School in North Carolina appear to have a slight decreasing trend from 2010 to 2019, despite a recent increase in 2019. Ozone fluctuates seasonally throughout the year. The Seasonal Mann-Kendall test confirms this negative trend is statistically signficant, indicating that ozone levels have generally decline over the time period. (tau = -0.143, 2-sided pvalue =0.046724)
+> Answer: Mean monthly ozone concentrations at Garinger High School in North Carolina appear to have a slight decreasing trend from 2010 to 2019, despite a recent increase in 2019. Ozone fluctuates seasonally throughout the year. The Seasonal Mann-Kendall test confirms this negative trend is weakly statistically signficant, indicating that ozone levels have generally decline over the time period. (z = -1.963, p-value = 0.04965)
 
 15. Subtract the seasonal component from the `GaringerOzone.monthly.ts`. Hint: Look at how we extracted the series components for the EnoDischarge on the lesson Rmd file.
 
@@ -269,11 +269,11 @@ Monthly_Ozone_Non_Seas <-
   GaringerOzone.monthly.ts - ozone_monthly_compon[,1]
 
 #16
-Ozone_Monthly_noseas_trend <- Kendall::MannKendall(Monthly_Ozone_Non_Seas)
+Ozone_Monthly_noseas_trend <- trend::mk.test(Monthly_Ozone_Non_Seas)
 Ozone_Monthly_noseas_trend
 summary(Ozone_Monthly_noseas_trend)
 
 
 ```
 
-> Answer: Removing seasonality reveals a clear decreasing trend in monthly ozone concentrations from 2010 to 2019. The negative trend in monthly mean ozone levels becomes slightly stronger and more statistically significant, with the p-value decreasing from 0.0467 to 0.0075. While ozone levels fluctuate seasonally, there is a long-term downward trend. 
+> Answer: Removing seasonality reveals a clear decreasing trend in monthly ozone concentrations from 2010 to 2019. The negative trend in monthly mean ozone levels becomes stronger and more statistically significant, with the p-value decreasing from 0.04965 to 0.00754. While ozone levels fluctuate seasonally, there is a long-term downward trend. 

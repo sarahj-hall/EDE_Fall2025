@@ -1,0 +1,195 @@
+---
+title: "Spatial Analysis in R, Lab"
+author: "Environmental Data Analytics | John Fay & Luana Lima"
+date: "Fall 2025"
+output: pdf_document
+editor_options:
+  chunk_output_type: console
+  markdown: 
+    wrap: none
+---
+
+## Topics
+-   Q&A on Lessons
+    -   Importance of spatial data in environmental data analysis
+    -   Spatial data models: Raster v. Vector
+    -   Spatial data file formats; reading in spatial data
+    -   `sf` objects, aka "the spatial dataframe" & its components
+    -   Coordinate reference systems
+    -   Attribute joins
+    -   Data aggregation; dissolving features
+    -   Spatial selection
+    -   Spatial intersection
+    -   Geometric modification (centroid, buffer, convex hull, etc.)
+    -   Data Visualization
+-   Demo: Spatial Data Resources
+    - Open Data Hubs
+    - ArcGIS Online Data
+    
+    
+## Spatal Data Resources
+
+### Background
+-   More and more organizations provide "Open Data Portals"
+-   The "Manufactured gas plant" dataset we used was obtained via one of these.
+-   Let's look at the process of exploring and ingesting these data into R
+-   First, let's set up our coding session
+
+```{r setup, warning=F, error=F}
+#Import packages
+library(tidyverse);library(here);
+library(sf);library(mapview);library(leaflet)
+
+#A new package: arcgis -- discussed below
+#install.packages('arcgis', repos = c('https://r-arcgis.r-universe.dev', 'https://cloud.r-project.org'))
+#library(arcgis)
+
+#Check the working directory
+here()
+
+```
+
+
+### Exercise: Open Data Portals
+*   Navigate to https://www.nconemap.gov/ - NC's home for spatial data
+  -   Scroll down and view the various themes you can browse...
+  -   Click on the Energy theme...
+  -   Note the "Manufactured Gas Plant Site" layer, listed as a *Feature Service*
+  
+*   Click on the link for the "Manufactured Gas Plant Site" layer
+  -   Direct link: https://www.nconemap.gov/datasets/a0722062315143a7980cebb79a204781_4/
+
+*   From the above website, click on the`View Full Details` link. 
+  -   From here you could download the data, but we'll link to the data directly. 
+  -   Find and extend the dropdown list for `View API Resources`
+  -   Copy the link associated with the `GeoJSON` service
+  
+The link you should have copied is here:  
+https://services.nconemap.gov/secure/rest/services/NC1Map_Hazardous_Waste/MapServer/4/query?outFields=*&where=1%3D1&f=geojson 
+
+We'll now use this to fetch the data directly into our R coding environment.
+
+```{r import data from GeoJSON feature service}
+#Set the URL as the data source string
+data_source <- paste0(
+  'https://services.nconemap.gov/secure/rest/services/',
+  'NC1Map_Hazardous_Waste/MapServer/4/',
+  'query?outFields=*&where=1%3D1&f=geojson')
+
+gas_plants <- st_read(data_source)
+
+mapview(gas_plants)
+
+```
+
+
+Another resource is hosted by the US Fish & Wildlife Their open data site (<https://gis-fws.opendata.arcgis.com/>) has links to many datasets.
+
+When the data is served in GeoJSON format, we can ingest it directly in to R. Follow these steps: 
+-   Navigate to <https://gis-fws.opendata.arcgis.com/>
+-   Scroll down to the Explore Categories area. Select Biota (for example)
+-   Search for "Sea Turtle Nesting"
+-   Select the first return ("2023 Sea Turtle Nesting Survey TAFB results") and open its [link](https://duke.is/SeaTurtleNestingData)
+-   Locate the APIs dropdown and copy the link to the GeoJSON option.
+
+If you have difficulty, the link you want is: 
+-   <https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/services/survey123_3d7e213f47a94f1b829aa7cf54eab095_results/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson>
+
+This a link to a spatial dataset in GeoJSON format. Let's read this dataset in and explore it:
+-   Create a spatial dataframe from the link, filtering for only records in North Carolina (STATE == "NC")
+-   Reveal its structure
+-   What coordinate reference system (crs) does it use?
+
+Well do this one together...
+```{r read in sea turtle data}
+#Create the data source url
+data_source1 <- paste0(
+  'https://services.arcgis.com/QVENGdaPbd4LUkLV/arcgis/rest/',
+  'services/survey123_3d7e213f47a94f1b829aa7cf54eab095_results/',
+  'FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson')
+
+#Read in to a spatial dataframe
+sea_turtles <- st_read(data_source1)
+
+mapview(sea_turtles)
+
+```
+
+#Now we can make a pretty map!
+```{r cluster map}
+#Create the map
+turtle_map <- leaflet(sea_turtles) %>% 
+  addTiles() %>% 
+  addMarkers(
+    clusterOptions = markerClusterOptions(),  #cluster option 
+    popup = ~species
+  )
+
+#Show the map
+turtle_map
+
+#Saved the map as an HTML file
+#htmlwidgets::saveWidget(turtle_map, 'my_map.html')
+```
+
+
+Now, see if you can find, import, and display data from Durham's Open Data portal
+-   Do a web search for Durham Open Data
+-   Browse and choose a Feature Service (e.g. Landmarks & Points of Interest)
+-   Find the GeoJSON endpoint and import the dataset
+-   Explore properties of the dataset
+-   Make a map
+-   Export your map to an image or HTML document
+
+
+```{r fetch and display an online spatial dataset}
+
+
+```
+
+
+
+## ArcGIS Online
+If we dissect the URL pointing to the feature server, we can discover other data hosted on the server. Both the gas plant and the landslide data sources begin with <"https://services.nconemap.gov/secure/rest/services/"> -- the address of the server hosting these layers. 
+-   Open <https://services.nconemap.gov/secure/rest/services/> in your browser
+-   Note all the resources hosted there
+  -   **MapServer** and **FeatureServer** items host vector data
+-   Select the **NC1Map_Health** Feature Server
+  -   View the metadata for this feature service
+  -   This feature service hosts four layers...
+-   Select the Hospitals (0)  Layer link
+  -   We see more metadata, including a list of all the fields in this spatial dataset
+  -   At the bottom, we see "Supported Operations" including a Query link
+-   Select the Query link at the bottom of the page
+  
+
+Recognizing that R users have a thirst for spatial data hosted on ArcGIS Servers, ESRI has developed a tool that allows easier access to hosted spatial data. Info on the ArcGIS Package for R is here:   
+https://www.esri.com/arcgis-blog/products/developers/announcements/announcing-arcgis-r-package/
+
+We can use this package to access the same data we found above: 
+
+```{r eval=FALSE}
+#The same data source for the manufactured gas plant data
+f_service_url <- paste0('https://services.nconemap.gov/secure/rest/services/NC1Map_Health/FeatureServer')
+
+#Read the data into a feature service object
+f_service <- arc_open(f_service_url)
+class(f_service)
+
+#Retrieve the data associated with the 1st feature service w/`get_layer()` 
+f_layer <- get_layer(f_service, id=0)
+class(f_layer)
+
+#Convert the feature layer to a spatial dataframe w/`arc_select()`
+hospitals_sf <- arc_select(f_layer)
+class(hospitals_sf)
+
+#Map the spatial dataframe
+mapview::mapview(
+  hospitals_sf,
+  zcol='hltype',
+  col.regions = RColorBrewer::brewer.pal(10, "Paired"),
+  map.types = "CartoDB.Positron"
+  )
+
+```

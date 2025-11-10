@@ -241,7 +241,7 @@ wind_data_decomp <- stl(wind_data_ts,s.window = "periodic")
 plot(wind_data_decomp)
 
 # Run SMK test
-wind_data_trend1 <- Kendall::SeasonalMannKendall(wind_data_ts)
+wind_data_trend1 <- Kendall::SeasonalMancnKendall(wind_data_ts)
 
 # Inspect results
 #p-value is < 0.05, so reject H0 data is stationary, there is a trend
