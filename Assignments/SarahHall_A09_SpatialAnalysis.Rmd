@@ -37,6 +37,13 @@ library(mapview); mapviewOptions(fgb = FALSE)
 #check wd
 here()
 
+#create my theme 
+mytheme <- theme_classic(base_size = 12) 
+  theme(axis.text = element_text(color = "black"),
+        legend.position = "top")
+#set mytheme to standard theme
+theme_set(mytheme)
+
 ```
 
 
@@ -124,7 +131,14 @@ str(NWIS_sites_sf)
 
 ```{r Plot the spatial features}
 #13. Plot the gage locations atop the county features
-
+ggplot()+
+  geom_sf(data = counties_NE, color = 'gray')+
+  geom_sf(data = NWIS_sites_sf, alpha = 0.75, color = 'purple')+
+  labs(
+    title = "NWIS Gage Locations in Nebraska",
+    subtitle = "By: Sarah Hall"
+    
+  )
 
 ```
 
@@ -144,23 +158,24 @@ Lastly, we want to attach some gage height data to our site locations. I've cons
 
 ```{r Read in gage site data}
 #14. Read the site flow data into a data frame
-
-
+NWIS_SiteFlowData <- read.csv(here('Data/Raw/NWIS_SiteFlowData_NE_RAW.csv'),
+                              stringsAsFactors = TRUE)
 
 #15. Show the structure of the dataframe 
-
-
+str(NWIS_SiteFlowData)
 
 #16. Join the flow data to our NWIS gage location spatial dataframe
-
-
+NWIS_gage_flow_join <- NWIS_sites_sf %>% 
+  inner_join(
+    NWIS_SiteFlowData,
+    by = c("site_no" = "site_no")
+    )
 
 #17. Show the column names in the resulting spatial dataframe
-
-
+colnames(NWIS_gage_flow_join)
 
 #18. Show the dimensions of this joined dataset
-
+dim(NWIS_gage_flow_join)
 
 
 ```
@@ -173,7 +188,11 @@ Now we can examine where the flooding appears most acute by visualizing gage hei
 
 ```{r map gage sites}
 #Map the points, sized by gage height
-
+mapview(NWIS_gage_flow_join,
+        cex = 'gage_ht'
+        )+
+  mapview(counties_NE, 
+        col.regions = "grey")
 
 ```
 
@@ -191,12 +210,19 @@ Up next we will do some spatial analysis with our data. To prepare for this, we 
 
 ```{r spatial analysis}
 #20 Transform the counties and gage location datasets to UTM Zone 14
-
-
+CountiesNE.sf.utm <- st_transform(counties_NE,32614)
+NWISGageJoin.utm <- st_transform(NWIS_gage_flow_join,32614)
 
 #21 Plot the data
-
-
+ggplot()+
+  geom_sf(data=CountiesNE.sf.utm, 
+          aes(fill =  STATEFP),
+          fill = 'lightyellow',
+          color = 'black')+
+  geom_sf(data=NWISGageJoin.utm, color = "blue", alpha =0.75)+
+  labs(
+    title = "Gage stations across Nebraska Counties (UTM Zone 14)"
+  )
 
 ```
 
@@ -216,15 +242,48 @@ Now let's zoom into a particular county and examine the gages located there.
 
 ```{r spatial selection}
 #22 Select Washington county to a new spatial dataframe
-
+WashCo.sf <- CountiesNE.sf.utm %>% 
+  filter(NAME == "Washington")
 
 #23 Spatially select gages within the selected county to a new spatial dataframe
+gages_in_WashCo <- NWISGageJoin.utm %>% 
+  st_filter(WashCo.sf, .predicate = st_intersects)
 
 
 #24 Spatially select gages within 20k of the selected county to a new spatial dataframe
+#create 20km buffer
+WashCo_20km <- WashCo.sf %>% 
+  st_buffer(.,dist=20000)
 
+#select with buffer
+gages_within_20km <- NWISGageJoin.utm %>% 
+  st_filter(WashCo_20km, .predicate = st_intersects)
 
 #25 Plot
+mapview(CountiesNE.sf.utm,
+        col.regions = 'white',
+        color = 'black',
+        map.types = "CartoDB.Positron")+
+mapview(WashCo,
+        col.regions = 'yellow',
+        alpha.regions = 0.5)+
+mapview(gages_within_20km,
+        alpha.regions = 1,
+        col.regions = "red")+
+  mapview(gages_in_WashCo,
+        col.regions = "blue",
+        alpha.regions = 1)
+  
+#### edit below
 
+ggplot()+
+  geom_sf(data=CountiesNE.sf.utm, 
+          aes(fill =  STATEFP),
+          fill = 'lightyellow',
+          color = 'black')+
+  geom_sf(data=NWISGageJoin.utm, color = "blue", alpha =0.75)+
+  labs(
+    title = "Gages inside and within 20km of Washington County (NE)"
+  )
 
 ```
