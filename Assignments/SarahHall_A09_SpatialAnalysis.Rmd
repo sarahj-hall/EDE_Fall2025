@@ -214,14 +214,18 @@ CountiesNE.sf.utm <- st_transform(counties_NE,32614)
 NWISGageJoin.utm <- st_transform(NWIS_gage_flow_join,32614)
 
 #21 Plot the data
-ggplot()+
-  geom_sf(data=CountiesNE.sf.utm, 
-          aes(fill =  STATEFP),
-          fill = 'lightyellow',
+ggplot() +
+   geom_sf(data=CountiesNE.sf.utm,
+          fill = 'white',
           color = 'black')+
-  geom_sf(data=NWISGageJoin.utm, color = "blue", alpha =0.75)+
+  geom_sf(data = NWISGageJoin.utm, 
+          aes(color = gage_ht),
+              size = 2.5,
+              alpha =0.75) +
+  scale_color_viridis_c(option = "rocket")+
   labs(
-    title = "Gage stations across Nebraska Counties (UTM Zone 14)"
+    title = "Gage stations across Nebraska Counties (UTM Zone 14)",
+    color = "Gage Height"
   )
 
 ```
@@ -249,13 +253,12 @@ WashCo.sf <- CountiesNE.sf.utm %>%
 gages_in_WashCo <- NWISGageJoin.utm %>% 
   st_filter(WashCo.sf, .predicate = st_intersects)
 
-
 #24 Spatially select gages within 20k of the selected county to a new spatial dataframe
 #create 20km buffer
 WashCo_20km <- WashCo.sf %>% 
   st_buffer(.,dist=20000)
 
-#select with buffer
+#select gages with buffer
 gages_within_20km <- NWISGageJoin.utm %>% 
   st_filter(WashCo_20km, .predicate = st_intersects)
 
@@ -264,7 +267,7 @@ mapview(CountiesNE.sf.utm,
         col.regions = 'white',
         color = 'black',
         map.types = "CartoDB.Positron")+
-mapview(WashCo,
+mapview(WashCo.sf,
         col.regions = 'yellow',
         alpha.regions = 0.5)+
 mapview(gages_within_20km,
