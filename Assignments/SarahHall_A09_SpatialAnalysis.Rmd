@@ -273,17 +273,4 @@ mapview(gages_within_20km,
   mapview(gages_in_WashCo,
         col.regions = "blue",
         alpha.regions = 1)
-  
-#### edit below
-
-ggplot()+
-  geom_sf(data=CountiesNE.sf.utm, 
-          aes(fill =  STATEFP),
-          fill = 'lightyellow',
-          color = 'black')+
-  geom_sf(data=NWISGageJoin.utm, color = "blue", alpha =0.75)+
-  labs(
-    title = "Gages inside and within 20km of Washington County (NE)"
-  )
-
 ```
