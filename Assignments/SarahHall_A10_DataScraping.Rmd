@@ -1,0 +1,244 @@
+---
+title: "Assignment 10: Data Scraping"
+author: "Sarah Hall"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## OVERVIEW
+
+This exercise accompanies the lessons in Environmental Data Analytics on data scraping. 
+
+## Directions
+1. Rename this file `<FirstLast>_A10_DataScraping.Rmd` (replacing `<FirstLast>` with your first and last name).
+2. Change "Student Name" on line 3 (above) with your name.
+3. Work through the steps, **creating code and output** that fulfill each instruction.
+4. Be sure your code is tidy; use line breaks to ensure your code fits in the knitted output.
+5. Be sure to **answer the questions** in this assignment document.
+6. When you have completed the assignment, **Knit** the text and code into a single PDF file.
+
+
+## Set up 
+1. Set up your session:
+
+* Load the packages `tidyverse`, `rvest`, and any others you end up using.
+* Check your working directory
+
+```{r 1. Project Setup, message = FALSE}
+#1 
+library(tidyverse)
+library(lubridate)
+library(rvest)
+library(here)
+here()
+
+#create my theme 
+mytheme <- theme_classic(base_size = 12) 
+  theme(axis.text = element_text(color = "black"),
+        legend.position = "top")
+#set mytheme to standard theme
+theme_set(mytheme)
+
+```
+
+2. We will be scraping data from the NC DEQs Local Water Supply Planning website, specifically the Durham's 2024 Municipal Local Water Supply Plan (LWSP): 
+ * Navigate to https://www.ncwater.org/WUDC/app/LWSP/search.php
+ * Scroll down and select the LWSP link next to Durham Municipality. 
+ * Note the web address: <https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2024>
+ 
+Indicate this website as the as the URL to be scraped. (In other words, read the contents into an `rvest` webpage object.)
+
+```{r set.the.scraping.website}
+#2 
+LWSP_website <- read_html('https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2024')
+
+```
+
+3. The data we want to collect are listed below:
+
+* From the "1. System Information" section:
+ * Water system name
+ * PWSID
+ * Ownership
+ 
+* From the "3. Water Supply Sources" section:
+ * Maximum Day Use (MGD) - for each month
+
+In the code chunk below scrape these values, assigning them to four separate variables.
+
+>HINT: The first value should be "Durham", the second "03-32-010", the third "Municipality", and the last should be a vector of 12 numeric values (represented as strings)".
+
+```{r scrape.the.data}
+#3 
+water_system_name <- LWSP_website %>% 
+  html_nodes('div+ table tr:nth-child(1) td:nth-child(2)') %>% 
+  html_text()
+PWSID <- LWSP_website %>%  
+  html_nodes('td tr:nth-child(1) td:nth-child(5)') %>% 
+  html_text()
+Ownership <- LWSP_website %>%  
+  html_nodes('div+ table tr:nth-child(2) td:nth-child(4)') %>%
+  html_text()
+MaxDayUse <- LWSP_website %>%  
+  html_nodes('th~ td+ td , th~ td+ td') %>%
+  html_text()
+
+```
+
+
+4. Convert your scraped data into a dataframe. This dataframe should have a column for each of the 4 variables scraped and a row for the month corresponding to the withdrawal data. Also add a Date column that includes your month and year in data format. (Feel free to add a Year column too, if you wish.)
+
+>TIP: Use `rep()` to repeat a value when creating a dataframe.
+
+>NOTE: It's likely you won't be able to scrape the monthly widthrawal data in chronological order. You can overcome this by creating a month column manually assigning values in the order the data are scraped: "Jan", "May", "Sept", "Feb", etc... 
+
+5. Create a line plot of the maximum daily withdrawals across the months for 2024, making sure, the months are presented in proper sequence.
+
+```{r create.a.dataframe.from.scraped.data}
+#4 
+water_df <- data.frame("Month" = c(1,5,9,2,6,10,3,7,11,4,8,12),
+                       "Year" = rep(2024, 12),
+                       "MaxDayUse" = as.numeric(MaxDayUse)) %>% 
+            mutate(
+              Water_System_Name = !!Ownership,
+              PWSID = !!PWSID,
+              Ownership = !!Ownership,
+              Date = my(paste(Month, "-", Year)))
+
+#5 
+ggplot(water_df, aes(x=Date,
+                     y = MaxDayUse))+
+  geom_line()+
+  labs(
+    title = "2024 Durham Muncipal Water Supply Maximum Daily Withdrawal",
+    y = "Maximum Daily Withdrawal (mgd)",
+    x = "Date")
+
+```
+
+6. Note that the PWSID and the year appear in the web address for the page we scraped. Construct a function with two inputs - "PWSID" and "year" - that:
+  - Creates a URL pointing to the LWSP for that PWSID for the given year
+  - Creates a website object and scrapes the data from that object (just as you did above)
+  - Constructs a dataframe from the scraped data, mostly as you did above, but includes the PWSID and year provided as function inputs in the dataframe. 
+  - Returns the dataframe as the function's output
+
+
+```{r construct.a.scraping.function}
+#6. 
+
+scrape.it <- function(the_facility, the_year){
+  #get proper URL
+  the_base_url <- 'https://www.ncwater.org/WUDC/app/LWSP/report.php?'
+  the_url <- paste0(the_base_url,'pwsid=',the_facility,'&year=', the_year)
+  
+  #get the website
+  LWSP_website <- read_html(the_url)
+  print(the_url)
+  
+  #scrape the data
+  water_system_name <- LWSP_website %>% 
+    html_nodes('div+ table tr:nth-child(1) td:nth-child(2)') %>% 
+    html_text()
+  PWSID <- LWSP_website %>%  
+    html_nodes('td tr:nth-child(1) td:nth-child(5)') %>% 
+    html_text()
+  Ownership <- LWSP_website %>%  
+    html_nodes('div+ table tr:nth-child(2) td:nth-child(4)') %>%
+    html_text()
+  MaxDayUse <- LWSP_website %>%  
+    html_nodes('th~ td+ td , th~ td+ td') %>%
+    html_text()
+  
+  #convert the the dataframe 
+  water_df <- data.frame("Month" = c(1,5,9,2,6,10,3,7,11,4,8,12),
+                       "Year" = rep(the_year, 12),
+                       "MaxDayUse" = as.numeric(MaxDayUse)) %>% 
+            mutate(
+              Water_System_Name = !!Ownership,
+              PWSID = !!PWSID,
+              Ownership = !!Ownership,
+              Date = my(paste(Month, "-", Year)))
+
+  #return the dataframe
+  return(water_df)
+}
+
+```
+
+7. Use the function above to extract and plot max daily withdrawals for Durham (PWSID='03-32-010') for each month in 2020. Then show the structure of the dataframe with either the `str()` or the `glimpse()` function. 
+
+```{r fetch.and.plot.Durham.2020.data}
+#7 
+durham_water_2020 <- scrape.it('03-32-010',2020)
+
+#graph
+ggplot(durham_water_2020, aes(x=Date,
+                     y = MaxDayUse))+
+  geom_line()+
+  labs(
+    title = "2020 Durham Muncipal Water Supply Maximum Daily Withdrawal",
+    y = "Maximum Daily Withdrawal (mgd)",
+    x = "Date")
+
+#show structure
+glimpse(durham_water_2020)
+
+```
+
+8. Use the function above to extract data for Cary (PWSID = '03-32-010') in 2020. Combine this data with the Durham data collected above and create a plot that compares Cary's to Durham's water withdrawals.
+
+```{r fetch.and.plot.Cary.2020.data}
+#8 
+#get cary 2020 water data
+cary_water_2020 <- scrape.it('03-92-020',2020)
+
+#combine with Durham data
+cary_durham_water <- rbind(durham_water_2020, cary_water_2020)
+
+#graph
+ggplot(cary_durham_water, aes(x = Date, y = MaxDayUse, color = PWSID))+
+  geom_line()+
+  labs(
+    title = "2020 Durham & Cary Municipal Water Supply Max Daily Withdrawal",
+    y = "Maximum Daily Withdrawal (mgd)",
+    x = "Date",
+    color = "Municipal")+
+  scale_color_manual(values = c('green', 'blue'), labels = c('Durham', 'Cary'))
+
+```
+
+
+9. Use the code & function you created above to plot Cary's max daily withdrawal by months for the years 2018 thru 2023.Add a smoothed line to the plot (method = 'loess').
+
+> TIP: See Section 3.2 in the "10_Data_Scraping.Rmd" where we apply "map2()" to iteratively run a function over two inputs. Pipe the output of the map2() function to `bind_rows()` to combine the dataframes into a single one, and use that to construct your plot.
+
+```{r fetch.and.plot.Cary.multiyear.data }
+#9 
+#create the years and facility vectors
+the_years = 2018:2023
+the_facility = rep('03-92-020', length(the_years))
+
+#check that they are the same length
+the_years
+the_facility
+
+#scrape using map2
+CaryWater2018to23 <- map2(the_facility, the_years, scrape.it) %>% 
+  bind_rows()
+
+#graph it
+ggplot(CaryWater2018to2023,aes(x=Date,y=MaxDayUse)) + 
+  geom_line() + 
+  geom_smooth(method="loess",se=FALSE) +
+  labs(
+    title = "Cary Water Usage Data: 2018-2023",
+    y="Max Daily Withdrawal (mgd)",
+    x="Date"
+    )
+
+```
+
+Question: Just by looking at the plot (i.e. not running statistics), does Cary have a trend in water usage over time?
+> Answer:
+> Based on the plot there appears to be a strong seasonal trend (increase in the summer and decrease in the winter), and an overall slight increasing trend in Cary water usage over time.   
